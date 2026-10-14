@@ -1,0 +1,16 @@
+:root { color-scheme: light dark; --line: #d0d4da; --muted: #5d636e; --bad: #b42318; }
+@media (prefers-color-scheme: dark) { :root { --line: #3a3f47; --muted: #a0a7b2; --bad: #ff8a7a; } }
+body { font: 13px/1.5 system-ui, sans-serif; margin: 10px; }
+body.popup { width: 380px; }
+body.page { max-width: 720px; margin: 32px auto; padding: 0 16px; font-size: 14px; }
+h1 { font-size: 16px; margin: 0 0 8px; }
+body.page h1 { font-size: 22px; }
+h2 { font-size: 15px; margin: 22px 0 6px; }
+.card { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 8px 0; }
+.card.malicious, .card.manipulative { border-color: var(--bad); }
+.card.defensive { opacity: .75; }
+blockquote { margin: 6px 0; padding: 6px; background: rgba(127,127,127,.12); font-family: ui-monospace, monospace; font-size: 11px; word-break: break-word; }
+.small, small { color: var(--muted); font-size: 12px; }
+.toggle { display: block; font-weight: 600; margin: 8px 0; }
+input[type=url] { width: 100%; max-width: 420px; padding: 6px; margin: 4px 0 8px; display: block; }
+button { padding: 5px 10px; }

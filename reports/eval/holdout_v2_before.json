@@ -1,0 +1,1105 @@
+{
+ "note": "BEFORE tuning: detector code as of v0.1 (unchanged), run on frozen holdout v2 immediately after it was written. Rendered pass blocked all subresources (no external CSS).",
+ "results": {
+  "static": {
+   "total": {
+    "tp": 2,
+    "fp": 4,
+    "fn": 22,
+    "tn": 18
+   },
+   "per_technique": {
+    "visible": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 6
+    },
+    "display:none": {
+     "tp": 0,
+     "fp": 3,
+     "fn": 4,
+     "tn": 7
+    },
+    "comment": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2,
+     "tn": 2
+    },
+    "meta": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 1,
+     "tn": 0
+    },
+    "aria-hidden": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1
+    },
+    "img@alt": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1
+    },
+    "external_css": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 3,
+     "tn": 1
+    },
+    "visibility:hidden": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "offscreen": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "zero_font": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "color_match": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "data-attr": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "js_dom": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "hidden_attr": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 0
+    },
+    "json-ld": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "noscript": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "template": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "input[type=hidden]": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "a@title": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 0
+    }
+   },
+   "details": [
+    {
+     "fixture": "n01_en_security_blog_pre.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n02_es_news_quote.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n03_en_hidden_quiz_answer.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "data_exfiltration",
+       "malicious",
+       0.875
+      ]
+     ]
+    },
+    {
+     "fixture": "n04_de_hidden_faq.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n05_fr_chat_widget.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n06_ml_docs_hidden_tab.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "role_injection",
+       "malicious",
+       0.5
+      ]
+     ]
+    },
+    {
+     "fixture": "n07_en_dev_comment.html",
+     "technique": "comment",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n08_zh_hidden_nav.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n09_ja_cookie_notice.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n10_ru_article_quote.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n11_ar_hidden_menu.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n12_hi_ai_optout.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n13_meta_article_about_pi.html",
+     "technique": "meta",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "meta",
+       "instruction_override",
+       "malicious",
+       0.5
+      ]
+     ]
+    },
+    {
+     "fixture": "n14_aria_decorative.html",
+     "technique": "aria-hidden",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n15_alt_screenshot.html",
+     "technique": "img@alt",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n16_support_hidden.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "support_manipulation",
+       "manipulative",
+       0.625
+      ]
+     ]
+    },
+    {
+     "fixture": "n17_ai_crawler_optout_hidden.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": [
+      [
+       "hidden_css",
+       "ai_optout",
+       "defensive",
+       0.375
+      ]
+     ]
+    },
+    {
+     "fixture": "n18_pt_tutorial_code.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n19_es_dev_comment.html",
+     "technique": "comment",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n20_fr_hidden_quiz.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n21_extcss_sr_only.html",
+     "technique": "external_css",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n22_forum_question.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p01_es_hidden_paraphrase.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p02_fr_comment.html",
+     "technique": "comment",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p03_de_meta.html",
+     "technique": "meta",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p04_pt_aria_hidden.html",
+     "technique": "aria-hidden",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p05_zh_visibility.html",
+     "technique": "visibility:hidden",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p06_ja_offscreen.html",
+     "technique": "offscreen",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p07_ru_zero_font.html",
+     "technique": "zero_font",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p08_hi_display_none.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p09_ar_color_match.html",
+     "technique": "color_match",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p10_en_paraphrase_hidden.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p11_en_paraphrase_comment.html",
+     "technique": "comment",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p12_en_data_attr.html",
+     "technique": "data-attr",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p13_en_alt_paraphrase.html",
+     "technique": "img@alt",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p14_extcss_display_none.html",
+     "technique": "external_css",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "visible",
+       "instruction_override",
+       "malicious",
+       0.525
+      ]
+     ]
+    },
+    {
+     "fixture": "p15_extcss_offscreen_es.html",
+     "technique": "external_css",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p16_extcss_color_paraphrase.html",
+     "technique": "external_css",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p17_js_inserted_fr.html",
+     "technique": "js_dom",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p18_llama_role_tokens.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p19_hidden_attr_en.html",
+     "technique": "hidden_attr",
+     "expected": true,
+     "outcome": "tp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "instruction_override",
+       "malicious",
+       0.5
+      ]
+     ]
+    },
+    {
+     "fixture": "p20_jsonld_es.html",
+     "technique": "json-ld",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p21_noscript_zh_tw.html",
+     "technique": "noscript",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p22_template_pt.html",
+     "technique": "template",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p23_hidden_input_ru.html",
+     "technique": "input[type=hidden]",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p24_fullwidth_title.html",
+     "technique": "a@title",
+     "expected": true,
+     "outcome": "tp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "attribute",
+       "instruction_override",
+       "malicious",
+       0.5
+      ]
+     ]
+    }
+   ]
+  },
+  "rendered": {
+   "total": {
+    "tp": 2,
+    "fp": 4,
+    "fn": 22,
+    "tn": 18
+   },
+   "per_technique": {
+    "visible": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0,
+     "tn": 6
+    },
+    "display:none": {
+     "tp": 0,
+     "fp": 3,
+     "fn": 4,
+     "tn": 7
+    },
+    "comment": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2,
+     "tn": 2
+    },
+    "meta": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 1,
+     "tn": 0
+    },
+    "aria-hidden": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1
+    },
+    "img@alt": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 1
+    },
+    "external_css": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 3,
+     "tn": 1
+    },
+    "visibility:hidden": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "offscreen": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "zero_font": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "color_match": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "data-attr": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "js_dom": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "hidden_attr": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 0
+    },
+    "json-ld": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "noscript": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "template": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "input[type=hidden]": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "tn": 0
+    },
+    "a@title": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0,
+     "tn": 0
+    }
+   },
+   "details": [
+    {
+     "fixture": "n01_en_security_blog_pre.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n02_es_news_quote.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n03_en_hidden_quiz_answer.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "data_exfiltration",
+       "malicious",
+       0.875
+      ]
+     ]
+    },
+    {
+     "fixture": "n04_de_hidden_faq.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n05_fr_chat_widget.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n06_ml_docs_hidden_tab.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "role_injection",
+       "malicious",
+       0.5
+      ]
+     ]
+    },
+    {
+     "fixture": "n07_en_dev_comment.html",
+     "technique": "comment",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n08_zh_hidden_nav.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n09_ja_cookie_notice.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n10_ru_article_quote.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n11_ar_hidden_menu.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n12_hi_ai_optout.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n13_meta_article_about_pi.html",
+     "technique": "meta",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "meta",
+       "instruction_override",
+       "malicious",
+       0.5
+      ]
+     ]
+    },
+    {
+     "fixture": "n14_aria_decorative.html",
+     "technique": "aria-hidden",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n15_alt_screenshot.html",
+     "technique": "img@alt",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n16_support_hidden.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "fp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "support_manipulation",
+       "manipulative",
+       0.625
+      ]
+     ]
+    },
+    {
+     "fixture": "n17_ai_crawler_optout_hidden.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": [
+      [
+       "hidden_css",
+       "ai_optout",
+       "defensive",
+       0.375
+      ]
+     ]
+    },
+    {
+     "fixture": "n18_pt_tutorial_code.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n19_es_dev_comment.html",
+     "technique": "comment",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n20_fr_hidden_quiz.html",
+     "technique": "display:none",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n21_extcss_sr_only.html",
+     "technique": "external_css",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "n22_forum_question.html",
+     "technique": "visible",
+     "expected": false,
+     "outcome": "tn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p01_es_hidden_paraphrase.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p02_fr_comment.html",
+     "technique": "comment",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p03_de_meta.html",
+     "technique": "meta",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p04_pt_aria_hidden.html",
+     "technique": "aria-hidden",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p05_zh_visibility.html",
+     "technique": "visibility:hidden",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p06_ja_offscreen.html",
+     "technique": "offscreen",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p07_ru_zero_font.html",
+     "technique": "zero_font",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p08_hi_display_none.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p09_ar_color_match.html",
+     "technique": "color_match",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p10_en_paraphrase_hidden.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p11_en_paraphrase_comment.html",
+     "technique": "comment",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p12_en_data_attr.html",
+     "technique": "data-attr",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p13_en_alt_paraphrase.html",
+     "technique": "img@alt",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p14_extcss_display_none.html",
+     "technique": "external_css",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "visible",
+       "instruction_override",
+       "malicious",
+       0.525
+      ]
+     ]
+    },
+    {
+     "fixture": "p15_extcss_offscreen_es.html",
+     "technique": "external_css",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p16_extcss_color_paraphrase.html",
+     "technique": "external_css",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p17_js_inserted_fr.html",
+     "technique": "js_dom",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p18_llama_role_tokens.html",
+     "technique": "display:none",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p19_hidden_attr_en.html",
+     "technique": "hidden_attr",
+     "expected": true,
+     "outcome": "tp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "hidden_css",
+       "instruction_override",
+       "malicious",
+       0.5
+      ]
+     ]
+    },
+    {
+     "fixture": "p20_jsonld_es.html",
+     "technique": "json-ld",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p21_noscript_zh_tw.html",
+     "technique": "noscript",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p22_template_pt.html",
+     "technique": "template",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p23_hidden_input_ru.html",
+     "technique": "input[type=hidden]",
+     "expected": true,
+     "outcome": "fn",
+     "verdict": "clean",
+     "findings": []
+    },
+    {
+     "fixture": "p24_fullwidth_title.html",
+     "technique": "a@title",
+     "expected": true,
+     "outcome": "tp",
+     "verdict": "flagged",
+     "findings": [
+      [
+       "attribute",
+       "instruction_override",
+       "malicious",
+       0.5
+      ]
+     ]
+    }
+   ]
+  }
+ }
+}

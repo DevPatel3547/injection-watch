@@ -1,0 +1,10 @@
+('benign', 'ai_optout/nf') 78
+('benign', 'dropped') 68
+('true_injection', 'defensive/nf') 1
+('true_injection', 'manipulative/FLAG') 3
+pages 241 findings 162 flagged 4
+   ('ai_optout', 'ai_optout', False) 156
+   ('manipulative', 'instruction_override', True) 3
+   ('promotional', 'agent_promotion', False) 1
+   ('defensive', 'ai_restriction', False) 1
+   ('manipulative', 'recommendation_manipulation', True) 1

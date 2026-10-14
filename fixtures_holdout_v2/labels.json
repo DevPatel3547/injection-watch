@@ -1,0 +1,470 @@
+{
+  "p01_es_hidden_paraphrase.html": {
+    "technique": "display:none",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "es",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": "Spanish, paraphrased override"
+  },
+  "p02_fr_comment.html": {
+    "technique": "comment",
+    "expect_flag": true,
+    "expect_location": "comment",
+    "lang": "fr",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p03_de_meta.html": {
+    "technique": "meta",
+    "expect_flag": true,
+    "expect_location": "meta",
+    "lang": "de",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p04_pt_aria_hidden.html": {
+    "technique": "aria-hidden",
+    "expect_flag": true,
+    "expect_location": "aria_hidden",
+    "lang": "pt",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p05_zh_visibility.html": {
+    "technique": "visibility:hidden",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "zh",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p06_ja_offscreen.html": {
+    "technique": "offscreen",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "ja",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p07_ru_zero_font.html": {
+    "technique": "zero_font",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "ru",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p08_hi_display_none.html": {
+    "technique": "display:none",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "hi",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p09_ar_color_match.html": {
+    "technique": "color_match",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "ar",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p10_en_paraphrase_hidden.html": {
+    "technique": "display:none",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p11_en_paraphrase_comment.html": {
+    "technique": "comment",
+    "expect_flag": true,
+    "expect_location": "comment",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p12_en_data_attr.html": {
+    "technique": "data-attr",
+    "expect_flag": true,
+    "expect_location": "attribute",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p13_en_alt_paraphrase.html": {
+    "technique": "img@alt",
+    "expect_flag": true,
+    "expect_location": "attribute",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p14_extcss_display_none.html": {
+    "technique": "external_css",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {
+      "/static/site.css": "site.css"
+    },
+    "note": ""
+  },
+  "p15_extcss_offscreen_es.html": {
+    "technique": "external_css",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "es",
+    "category": null,
+    "headers": {},
+    "assets": {
+      "/static/site.css": "site.css"
+    },
+    "note": ""
+  },
+  "p16_extcss_color_paraphrase.html": {
+    "technique": "external_css",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {
+      "/static/site.css": "site.css"
+    },
+    "note": ""
+  },
+  "p17_js_inserted_fr.html": {
+    "technique": "js_dom",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "fr",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p18_llama_role_tokens.html": {
+    "technique": "display:none",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p19_hidden_attr_en.html": {
+    "technique": "hidden_attr",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p20_jsonld_es.html": {
+    "technique": "json-ld",
+    "expect_flag": true,
+    "expect_location": "jsonld",
+    "lang": "es",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p21_noscript_zh_tw.html": {
+    "technique": "noscript",
+    "expect_flag": true,
+    "expect_location": "non_rendered",
+    "lang": "zh",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p22_template_pt.html": {
+    "technique": "template",
+    "expect_flag": true,
+    "expect_location": "non_rendered",
+    "lang": "pt",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p23_hidden_input_ru.html": {
+    "technique": "input[type=hidden]",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "lang": "ru",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "p24_fullwidth_title.html": {
+    "technique": "a@title",
+    "expect_flag": true,
+    "expect_location": "attribute",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n01_en_security_blog_pre.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n02_es_news_quote.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "lang": "es",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n03_en_hidden_quiz_answer.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n04_de_hidden_faq.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "de",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n05_fr_chat_widget.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "fr",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n06_ml_docs_hidden_tab.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n07_en_dev_comment.html": {
+    "technique": "comment",
+    "expect_flag": false,
+    "expect_location": "comment",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n08_zh_hidden_nav.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "zh",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n09_ja_cookie_notice.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "ja",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n10_ru_article_quote.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "lang": "ru",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n11_ar_hidden_menu.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "ar",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n12_hi_ai_optout.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "lang": "hi",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n13_meta_article_about_pi.html": {
+    "technique": "meta",
+    "expect_flag": false,
+    "expect_location": "meta",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n14_aria_decorative.html": {
+    "technique": "aria-hidden",
+    "expect_flag": false,
+    "expect_location": "aria_hidden",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n15_alt_screenshot.html": {
+    "technique": "img@alt",
+    "expect_flag": false,
+    "expect_location": "attribute",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n16_support_hidden.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n17_ai_crawler_optout_hidden.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n18_pt_tutorial_code.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "lang": "pt",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n19_es_dev_comment.html": {
+    "technique": "comment",
+    "expect_flag": false,
+    "expect_location": "comment",
+    "lang": "es",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n20_fr_hidden_quiz.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "fr",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  },
+  "n21_extcss_sr_only.html": {
+    "technique": "external_css",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {
+      "/css/a11y.css": "a11y.css"
+    },
+    "note": ""
+  },
+  "n22_forum_question.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "lang": "en",
+    "category": null,
+    "headers": {},
+    "assets": {},
+    "note": ""
+  }
+}

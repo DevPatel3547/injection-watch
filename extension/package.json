@@ -1,0 +1,11 @@
+{
+  "name": "injectionwatch-extension",
+  "version": "0.3.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node build.mjs && node check-dist.mjs",
+    "check": "node check-dist.mjs",
+    "package": "node check-dist.mjs && python3 -c \"import shutil; shutil.make_archive('injectionwatch-extension-0.3.0', 'zip', 'dist')\""
+  }
+}

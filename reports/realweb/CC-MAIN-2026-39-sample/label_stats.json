@@ -1,0 +1,169 @@
+{
+  "pages_scanned": 426318,
+  "findings": 336,
+  "pages_with_finding": 275,
+  "detector_findings_by_severity": {
+    "ai_optout": 320,
+    "manipulative": 12,
+    "defensive": 1,
+    "malicious": 3
+  },
+  "detector_pages_by_severity": {
+    "ai_optout": 260,
+    "manipulative": 11,
+    "defensive": 1,
+    "malicious": 3
+  },
+  "labelled_by_detector_severity": {
+    "ai_optout": 320,
+    "manipulative": 12,
+    "defensive": 1,
+    "malicious": 3
+  },
+  "precision_overall": {
+    "k": 7,
+    "n": 16,
+    "p": 0.4375,
+    "ci95": [
+      0.231,
+      0.6682
+    ]
+  },
+  "precision_flagged": {
+    "k": 6,
+    "n": 15,
+    "p": 0.4,
+    "ci95": [
+      0.1982,
+      0.6425
+    ]
+  },
+  "precision_by_detector_severity": {
+    "defensive": {
+      "k": 1,
+      "n": 1,
+      "p": 1.0,
+      "ci95": [
+        0.2065,
+        1.0
+      ]
+    },
+    "manipulative": {
+      "k": 5,
+      "n": 12,
+      "p": 0.4167,
+      "ci95": [
+        0.1933,
+        0.6805
+      ]
+    },
+    "malicious": {
+      "k": 1,
+      "n": 3,
+      "p": 0.3333,
+      "ci95": [
+        0.0615,
+        0.7923
+      ]
+    }
+  },
+  "severity_agreement_among_tp": {
+    "k": 6,
+    "n": 7,
+    "p": 0.8571,
+    "ci95": [
+      0.4869,
+      0.9743
+    ]
+  },
+  "confusion_detector_vs_label": {
+    "manipulative": {
+      "manipulative": 5,
+      "benign": 7
+    },
+    "defensive": {
+      "defensive": 1
+    },
+    "malicious": {
+      "benign": 2,
+      "promotional": 1
+    }
+  },
+  "tp_unique_hosts": 5,
+  "tp_unique_payloads": 5,
+  "prevalence_per_100k_pages": {
+    "defensive": {
+      "k": 1.0,
+      "n": 426318,
+      "p": 0.2346,
+      "ci95": [
+        0.0414,
+        1.3288
+      ]
+    },
+    "promotional": {
+      "k": 1.0,
+      "n": 426318,
+      "p": 0.2346,
+      "ci95": [
+        0.0414,
+        1.3288
+      ]
+    },
+    "manipulative": {
+      "k": 5.0,
+      "n": 426318,
+      "p": 1.1728,
+      "ci95": [
+        0.501,
+        2.7458
+      ]
+    },
+    "malicious": {
+      "k": 0.0,
+      "n": 426318,
+      "p": 0.0,
+      "ci95": [
+        0.0,
+        0.9011
+      ]
+    },
+    "any_true_injection": {
+      "k": 7,
+      "n": 426318,
+      "p": 1.642,
+      "ci95": [
+        0.7954,
+        3.3896
+      ]
+    },
+    "manipulative_or_malicious": {
+      "k": 5,
+      "n": 426318,
+      "p": 1.1728,
+      "ci95": [
+        0.501,
+        2.7458
+      ]
+    },
+    "ai_optout_signal (detector)": {
+      "k": 260,
+      "n": 426318,
+      "p": 60.9873,
+      "ci95": [
+        54.0128,
+        68.8618
+      ]
+    }
+  },
+  "prevalence_scaled_from_subsample": false,
+  "ai_optout_spot_check": {
+    "k": 314,
+    "n": 320,
+    "p": 0.9812,
+    "ci95": [
+      0.9597,
+      0.9914
+    ]
+  }
+}

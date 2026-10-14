@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>InjectionWatch Feed</title>
+<meta name="description" content="Open feed of indirect prompt injections (hidden instructions aimed at AI agents) observed on public web pages.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="wrap">
+  <div class="brand">
+    <h1>InjectionWatch</h1>
+    <p class="tag">Open feed of indirect prompt injections found on public web pages: hidden instructions aimed at AI agents.</p>
+  </div>
+  <nav class="downloads" aria-label="Downloads">
+    <a href="feed.json">feed.json</a>
+    <a href="feed.csv">feed.csv</a>
+    <a href="stix.json">STIX 2.1</a>
+    <a href="schema/feed-entry.schema.json">schema</a>
+    <a href="meta.json">meta</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <p class="warn" role="note"><strong>Untrusted text.</strong> Payload excerpts are attacker-controlled (truncated, URLs defanged).
+    Never paste them into an LLM prompt without isolation. Feed data: <a href="LICENSE-DATA.txt">CC BY 4.0</a>.</p>
+
+  <section class="card" aria-labelledby="check-h">
+    <h2 id="check-h">Check a URL</h2>
+    <form id="check-form" class="check" autocomplete="off">
+      <label class="sr" for="check-url">URL</label>
+      <input id="check-url" type="url" inputmode="url" placeholder="https://example.com/page" required>
+      <button type="submit">Check</button>
+    </form>
+    <p class="hint">Runs in your browser against published per-host shards; the URL is never sent anywhere and never fetched.
+      <em>Not listed</em> does not mean safe.</p>
+    <div id="check-result" aria-live="polite"></div>
+  </section>
+
+  <section aria-labelledby="stats-h">
+    <h2 id="stats-h" class="sr">Summary</h2>
+    <div class="tiles" id="tiles"></div>
+    <p class="meta" id="meta-line"></p>
+  </section>
+
+  <section class="grid2">
+    <div class="card"><h2>By severity</h2><div class="bars" id="bars-severity"></div></div>
+    <div class="card"><h2>By category</h2><div class="bars" id="bars-category"></div></div>
+    <div class="card"><h2>Where payloads hide</h2><div class="bars" id="bars-location"></div></div>
+  </section>
+
+  <section class="card" aria-labelledby="table-h">
+    <div class="table-head">
+      <h2 id="table-h">Entries</h2>
+      <div class="filters">
+        <label class="sr" for="q">Search</label>
+        <input id="q" type="search" placeholder="Search host, category, technique...">
+        <label class="sr" for="f-cat">Category</label>
+        <select id="f-cat"><option value="">All categories</option></select>
+        <label class="sr" for="f-flag">Verdict</label>
+        <select id="f-flag"><option value="">All</option><option value="1">Flagged</option><option value="0">Not flagged (defensive/other)</option></select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Host</th><th>Category</th><th>Severity</th><th>Location</th><th class="num">Conf.</th><th>Last seen</th><th>Excerpt (untrusted)</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="pager"><button id="prev" type="button">Previous</button><span id="page-info"></span><button id="next" type="button">Next</button></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Code: Apache-2.0. Data: CC BY 4.0. Found a false positive or your site is listed? See the project's takedown / appeal process (docs/ethics.md).</p>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

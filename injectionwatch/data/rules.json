@@ -1,0 +1,972 @@
+{
+  "_comment": "Shared by the Python scorer and the browser extension. Patterns are matched case-insensitively after NFKC normalization (of both pattern and text) and must stay JS-compatible: no lookbehind, no inline flags, no named groups, and never \\\\b next to a non-ASCII letter (JS \\\\b is ASCII-only). Edit this file directly; tests/test_rules.py checks Python/JS parity. v0.3: rules with needs_context=true only count when the same candidate also matched a rule from context_categories (otherwise login forms, privacy policies and support pages trip them); categories in single_count_categories count once toward the two-rule minimum; structured state blobs (JSON app state, spintax) only fire when they address an AI.",
+  "version": "0.3.0",
+  "threshold": 3.0,
+  "combo_bonus": 1.0,
+  "location_factors": {
+    "comment": 1.0,
+    "meta": 1.0,
+    "hidden_css": 1.0,
+    "aria_hidden": 1.0,
+    "attribute": 1.0,
+    "jsonld": 1.0,
+    "non_rendered": 1.0,
+    "invisible_unicode": 1.0,
+    "http_header": 1.0,
+    "cloaked": 1.0,
+    "visible": 0.6
+  },
+  "in_code_factor": 0.25,
+  "hidden_in_code_factor": 0.5,
+  "discussion_factor": 0.5,
+  "hidden_discussion_factor": 0.6,
+  "mention_factor": 0.3,
+  "mention_min_outside_chars": 12,
+  "zero_width_min_factor": 0.9,
+  "non_counting_categories": [
+    "imperative"
+  ],
+  "context_categories": [
+    "ai_addressing",
+    "instruction_override",
+    "role_injection",
+    "concealment"
+  ],
+  "single_count_categories": [
+    "ai_addressing"
+  ],
+  "blob_min_json_pairs": 3,
+  "blob_min_spintax": 3,
+  "discussion_pattern": "\\bprompt[- ]injections?\\b|\\bjailbreak(?:s|ing)?\\b|\\bred[- ]team|\\bchat\\s+templates?\\b|\\bindirect\\s+injections?\\b|\\bllm\\s+security\\b|\\badversarial\\s+prompts?\\b|inyecci[oó]n\\s+de\\s+(?:prompts?|instrucciones)|injection\\s+(?:de\\s+|d['’]\\s*)prompts?|injections?\\s+d['’]\\s*instructions|prompt-injektion|injeç[aã]o\\s+de\\s+(?:prompts?|instruç[oõ]es)|提示(?:词|詞)?注入|プロンプトインジェクション|промпт-инъекци|инъекци[яи]\\s+(?:промпт|подсказ)|प्रॉम्प्ट\\s+इंजेक्शन|حقن\\s+(?:الأوامر|التعليمات|المطالبات|الموجهات)",
+  "quote_pattern": "\\\"[^\\\"\\n]{2,300}\\\"|“[^”\\n]{2,300}”|„[^“”\\n]{2,300}[“”]|«[^»\\n]{2,300}»|‹[^›\\n]{2,300}›|「[^」\\n]{2,300}」|『[^』\\n]{2,300}』|(?:^|[\\s(\\[:—–-])'[^'\\n]{2,300}'(?=$|[\\s.,;:!?)\\]—–-])|(?:^|[\\s(\\[:—–-])‘[^’\\n]{2,300}’",
+  "rules": [
+    {
+      "id": "addr.if_you_are_ai",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\bif you(?:'re| are) (?:an? )?(?:ai|a\\.i\\.|llm|large language model|language model|ai (?:assistant|agent|model|system|crawler|recruiting tool)|assistant|agent|chatbot|crawler|scraper|gpt|chatgpt|claude|gemini|copilot)\\b",
+      "desc": "Conditional addressed to an AI system"
+    },
+    {
+      "id": "addr.note_to_ai",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:note|message|instructions?|attention|notice|reminder|memo|directive|psa|hey|dear|hello)\\s*,?\\s+(?:to\\s+|for\\s+)?(?:any\\s+|all\\s+|the\\s+|every\\s+)?(?:ai|a\\.i\\.|llms?|chatgpt|claude|gemini|copilot|chatbots?|(?:large\\s+)?language\\s+models?|ai[- ](?:assistants?|agents?|models?|systems?|tools?|crawlers?|readers?)|automated\\s+(?:assistants?|agents?|readers?|systems?|summari[sz]ers?)|autonomous\\s+agents?)\\b",
+      "desc": "Message explicitly addressed to an AI"
+    },
+    {
+      "id": "addr.ai_reading_this",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:ai|llms?|chatgpt|claude|gemini|chatbots?|bots?|(?:large\\s+)?language\\s+models?|automated\\s+(?:assistants?|agents?|readers?|systems?|tools?)|(?:ai\\s+|llm\\s+)?(?:agents?|assistants?|models?|systems?|tools?|crawlers?|readers?|summari[sz]ers?|recruiting\\s+tools?))\\s+(?:that\\s+(?:are|is)\\s+)?(?:reading|processing|parsing|summari[sz]ing|visiting|browsing|crawling|analy[sz]ing|reviewing|evaluating|screening|describing|indexing|ingesting|scanning)\\s+(?:this|these|the\\s+(?:page|site|text|markup|html|content|listing|image|document|resume|cv|article))\\b",
+      "desc": "Addresses AI systems currently processing the page"
+    },
+    {
+      "id": "addr.to_any_ai",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:to|for) (?:any|all|every) (?:ai|llm|language model|assistant|agent|chatbot|ai agent|ai assistant)s?\\b",
+      "desc": "Addresses any/all AI systems"
+    },
+    {
+      "id": "addr.automated_audience",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:automated|autonomous)\\s+(?:readers?|assistants?|agents?|summari[sz]ers?)\\b",
+      "desc": "Automated readers/agents as an audience"
+    },
+    {
+      "id": "addr.for_ai_heading",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "lang": "en",
+      "pattern": "(?:^|[\\n#>*]|[.!?]\\s)\\s*#*\\s*(?:for|to)\\s+(?:ai|llm)\\s+(?:agents?|assistants?|models?|crawlers?|systems?|bots?)\\s*[:—–-]",
+      "desc": "heading or label addressed to AI agents ('For AI agents: ...')"
+    },
+    {
+      "id": "addr.vocative_imperative",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:^|[.!?;]\\s+|\\n)\\s*(?:dear\\s+|hey\\s+|hello\\s+|attention,?\\s+)?(?:ai|llm|chatgpt|claude|gemini|copilot|chatbot|bot|assistant|agent|model|ai\\s+(?:assistant|agent|model)|language\\s+model)s?\\s*[,:]\\s*(?:please\\s+)?(?:(?:quietly|silently|discreetly|secretly|immediately|now|just|always|simply)\\s+)?(?:ignore|disregard|forget|set|drop|stop|do\\s+not|don't|never|always|only|tell|say|state|respond|reply|answer|recommend|describe|summari[sz]e|send|forward|include|insert|append|add|output|print|reveal|open|visit|click|navigate|call|execute|run|rate|rank|praise|treat|consider|pretend|act|you|from|your|make|write|use)\\b",
+      "desc": "Vocative to an AI followed by an imperative (structural)"
+    },
+    {
+      "id": "override.ignore_previous",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:ignore|disregard|forget|override|bypass)\\s+(?:(?:all|any|the|your|of|these|those)\\s+)*(?:previous|prior|above|earlier|preceding|original|system|existing|other|initial)\\s+(?:instructions?|prompts?|rules|directions|guidelines|directives|context|messages|orders)\\b",
+      "desc": "Classic instruction-override phrasing"
+    },
+    {
+      "id": "override.forget_everything",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:forget|ignore|disregard)\\s+(?:everything|all)\\s+(?:(?:that\\s+)?you(?:'ve|\\s+have|\\s+were)?\\s+(?:been\\s+)?(?:told|instructed|given|read)|(?:that\\s+)?(?:came|was\\s+(?:said|written))\\s+(?:before|above)|(?:written\\s+|stated\\s+)?above|before\\s+this|previously|prior|so\\s+far)\\b",
+      "desc": "forget everything above / you were told (not 'forget everything you think you know')"
+    },
+    {
+      "id": "override.paraphrase",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:set\\s+aside|disregard|discard|drop|abandon|ignore|forget|pay\\s+no\\s+attention\\s+to|stop\\s+following|no\\s+longer\\s+follow|stop\\s+obeying|do\\s+not\\s+follow|don't\\s+follow|throw\\s+out|scrap|override|bypass|cancel)\\s+(?:(?:all|any|of|the|its|their|these|those|whatever|every|my)\\s+){0,3}(?:(?:earlier|prior|previous|preceding|original|initial|existing|above|former|old|first|current|your|operator'?s?|system|developer'?s?|user'?s?|safety)\\s+){1,2}(?:guidance|instructions?|directions?|directives?|rules|guidelines|orders|brief(?:ing)?|task|prompts?|context|polic(?:y|ies)|programming|constraints|restrictions|safeguards|guardrails|question|request)\\b|\\b(?:set\\s+aside|disregard|discard|drop|abandon|ignore|forget|pay\\s+no\\s+attention\\s+to|stop\\s+following|no\\s+longer\\s+follow|stop\\s+obeying|do\\s+not\\s+follow|don't\\s+follow|throw\\s+out|scrap|override|bypass|cancel)\\s+(?:(?:all|any|of|the|its|their|these|those|whatever|every|my)\\s+){0,3}(?:guidance|instructions?|directions?|directives?|rules|guidelines|orders|brief(?:ing)?|task|prompts?|context|polic(?:y|ies)|programming|constraints|restrictions|safeguards|guardrails|question|request)\\b\\s+(?:that\\s+)?you\\s+(?:were|have\\s+been|got|received)\\b|\\b(?:pay\\s+no\\s+attention\\s+to|ignore|disregard|forget)\\s+what\\s+(?:the\\s+)?(?:person|user|human|operator|customer|you)\\s+(?:asked|told|said|requested|wanted|typed)\\b",
+      "desc": "Paraphrased instruction override (set aside your earlier guidance / stop following what you were given)"
+    },
+    {
+      "id": "override.void",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:instructions?|guidance|directions?|rules|brief(?:ing)?|task|prompts?|guidelines|orders|programming|restrictions|constraints)\\b[^.\\n]{0,50}?\\b(?:no\\s+longer\\s+(?:appl(?:y|ies)|valid|in\\s+effect|relevant|matters?|binding)|(?:is|are|has\\s+been|have\\s+been)\\s+(?:now\\s+)?(?:revoked|void|cancel+ed|obsolete|outdated|superseded|invalid|lifted|suspended|null\\s+and\\s+void))\\b|\\byou\\s+are\\s+no\\s+longer\\s+(?:bound|restricted|limited|required)\\s+(?:by|to)\\b|\\btreat\\s+(?:everything|all|anything)\\s+(?:above|before|earlier|else|previous(?:ly)?)\\b[^.\\n]{0,40}\\b(?:outdated|obsolete|void|invalid|irrelevant|superseded|cancel+ed|stale)\\b",
+      "desc": "Declares the agent's existing instructions void"
+    },
+    {
+      "id": "override.new_instructions",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:new|updated|real|actual|important|revised|true)\\s+(?:system\\s+)?instructions?\\s*:|\\b(?:your|the)\\s+(?:new|real|actual|updated|true)\\s+(?:objective|task|goal|instructions?|job|mission|role|purpose|directive)\\s+(?:is|are)\\b|\\bfrom\\s+(?:now|here)\\s+on,?\\s+(?:answer|respond|reply|only|always|never|output)\\b",
+      "desc": "Announces replacement instructions"
+    },
+    {
+      "id": "override.you_are_now",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\byou are now (?:a|an|in|the|my)\\b|\\bfrom now on,? you (?:are|will|must)\\b",
+      "desc": "Role hijack"
+    },
+    {
+      "id": "role.chat_tokens",
+      "lang": "en",
+      "category": "role_injection",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "<\\|(?:im_start|im_end|system|assistant|user|start_header_id|end_header_id|eot_id|begin_of_text|endoftext)\\|>|<(?:start|end)_of_turn>|\\[/?INST\\]|<</?SYS>>|</?(?:system|system_prompt|system-prompt)>|\\[(?:SYSTEM|system)(?:\\s+(?:OVERRIDE|PROMPT|MESSAGE|override|prompt|message))?\\]",
+      "desc": "Chat-template control tokens (ChatML, Llama 2/3, Gemma, [SYSTEM])"
+    },
+    {
+      "id": "role.prefix",
+      "lang": "en",
+      "category": "role_injection",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:^|\\n|[.!?]\\s)\\s*(?:system|assistant)\\s*:\\s*\\S",
+      "desc": "Fake system/assistant turn prefix"
+    },
+    {
+      "id": "role.markdown_header",
+      "lang": "en",
+      "category": "role_injection",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "#{2,}\\s*(?:system|instructions?)\\b|#{2,}\\s*(?:response|assistant|human|user)\\s*:",
+      "desc": "Markdown system/instruction/response header (Alpaca-style)"
+    },
+    {
+      "id": "tool.markup",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "<\\s*/?\\s*(?:function_calls|invoke|tool_use|tool_call|tool_calls)\\b",
+      "desc": "Tool-call markup"
+    },
+    {
+      "id": "tool.call_the_tool",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:call|use|invoke|run|execute|trigger)\\s+(?:the\\s+)?[\\w-]+\\s+(?:tool|function|plugin|action)\\b",
+      "desc": "Asks the agent to invoke a tool",
+      "needs_context": true
+    },
+    {
+      "id": "tool.function_syntax",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:send_email|send_message|execute_command|run_shell|shell_exec|fetch_url|http_request|browser\\.navigate|transfer_funds)\\s*\\(|\\\"name\\\"\\s*:\\s*\\\"(?:send_email|send_message|execute_command|run_shell|fetch_url|http_request|transfer_funds)\\\"",
+      "desc": "Tool/function-call syntax"
+    },
+    {
+      "id": "tool.curl_pipe_sh",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:curl|wget)\\s+[^\\s|]+[^|]{0,40}\\|\\s*(?:ba|z)?sh\\b",
+      "desc": "Download-and-execute command"
+    },
+    {
+      "id": "tool.malware_link",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:download|install|run|execute|open|launch)\\b[^.\\n]{0,80}https?://[^\\s\\\"'<>]+\\.(?:exe|msi|apk|dmg|pkg|sh|ps1|bat|scr|jar|vbs|cmd)\\b",
+      "desc": "Asks to download/run an executable",
+      "needs_context": true
+    },
+    {
+      "id": "exfil.send_data",
+      "lang": "en",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:send|forward|post|upload|transmit|email|leak|exfiltrate|append|encode|include|insert|embed|attach|submit|copy)\\b[^.\\n]{0,60}\\b(?:conversation|chat\\s+history|conversation\\s+history|chat\\s+log|previous\\s+messages|(?:the\\s+)?(?:user|shopper|customer|visitor|person|human|reader|buyer|client)'?s?\\s+(?:(?:saved|stored|private|personal|full|home|current)\\s+)*(?:(?:shipping|billing|email|e-mail|ip)\\s+)?(?:data|details|messages|emails?|files|credentials|passwords?|address(?:es)?|card(?:\\s+(?:number|details))?|phone(?:\\s+number)?|location|history|tokens?|cookies|session|contacts|documents)|system\\s+prompt|api\\s+keys?|credentials|passwords?|access\\s+tokens?|cookies|session\\s+tokens?)\\b",
+      "desc": "Asks the agent to move user data somewhere",
+      "needs_context": true
+    },
+    {
+      "id": "exfil.url_template",
+      "lang": "en",
+      "category": "data_exfiltration",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "https?://[^\\s\\\"'<>]+\\?[^\\s\\\"'<>]*=\\s*(?:\\{\\{?|\\[|<|\\$\\{?)?\\s*(?:data|conversation|history|secret|token|email|user|prompt|summary|addr|address|card|chat|msg|context|cookie|session|password|key)|https?://[^\\s\\\"'<>]+\\?(?:[\\w-]+=[^\\s&\\\"'<>]*&)*[\\w-]+=(?=$|[\\s\\\"'<>,;])",
+      "desc": "URL with a data-carrying query template or an open trailing parameter",
+      "needs_context": true
+    },
+    {
+      "id": "exfil.prompt_leak",
+      "lang": "en",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:reveal|print|output|repeat|show|disclose)\\s+(?:your|the)\\s+(?:system prompt|instructions|initial prompt|hidden prompt|original prompt)\\b",
+      "desc": "Prompt-leak request"
+    },
+    {
+      "id": "exfil.phish_credentials",
+      "lang": "en",
+      "category": "data_exfiltration",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:enter|provide|submit|type|share|confirm|verify|re-?enter|input|give)\\s+(?:their|your|the|his|her)\\s+(?:full\\s+)?(?:card\\s+number|credit\\s+card(?:\\s+(?:number|details))?|password|passcode|pin|login\\s+(?:details|credentials)|credentials|seed\\s+phrase|recovery\\s+phrase|private\\s+key|ssn|social\\s+security\\s+number|bank\\s+(?:details|account)|account\\s+number|cvv|one-time\\s+(?:code|password)|2fa\\s+code)\\b",
+      "desc": "Credential/payment phishing request",
+      "needs_context": true
+    },
+    {
+      "id": "conceal.dont_tell_user",
+      "lang": "en",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:do not|don't|never)\\s+(?:tell|inform|mention|reveal|disclose|show|alert|notify|warn)\\s+(?:this|that|it|these instructions|anything|about this)?\\s*(?:to\\s+)?(?:the\\s+)?(?:user|human|reader|customer|recruiter|operator|hiring manager|visitor|shopper|person)s?\\b",
+      "desc": "Tells the agent to hide something from its user"
+    },
+    {
+      "id": "conceal.without_telling",
+      "lang": "en",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\bwithout (?:telling|informing|alerting|notifying|asking|warning) (?:the\\s+)?(?:user|human|customer|reader|visitor|person)\\b",
+      "desc": "Act-without-telling phrasing"
+    },
+    {
+      "id": "conceal.secret",
+      "lang": "en",
+      "category": "concealment",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:keep (?:this|these instructions)|this instruction is) (?:secret|hidden|confidential)\\b",
+      "desc": "Secrecy request"
+    },
+    {
+      "id": "conceal.covert_action",
+      "lang": "en",
+      "category": "concealment",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:quietly|silently|secretly|covertly|discreetly|invisibly)\\s+(?:include|send|append|add|redirect|forward|insert|embed|attach|submit|post|open|visit|navigate|load|exfiltrate|copy)\\b",
+      "desc": "Covert action request"
+    },
+    {
+      "id": "user.tell_user",
+      "lang": "en",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:tell|inform|advise|urge|instruct|convince|persuade|direct|ask|encourage|warn|remind|pressure)\\s+(?:the\\s+|your\\s+|any\\s+|all\\s+)?(?:users?|visitors?|readers?|customers?|shoppers?|buyers?|clients?|humans?|person\\s+you\\s+are\\s+(?:helping|assisting)|people)\\s+(?:to|that)\\b",
+      "desc": "Tells the agent to steer its user"
+    },
+    {
+      "id": "user.reply_with",
+      "lang": "en",
+      "category": "imperative",
+      "weight": 1,
+      "standalone": false,
+      "pattern": "\\b(?:reply|respond|answer)\\s+(?:only\\s+)?(?:with|that)\\b|\\b(?:say|state|claim|assert)\\s+that\\b",
+      "desc": "Dictates the agent's reply"
+    },
+    {
+      "id": "hiring.candidate_praise",
+      "lang": "en",
+      "category": "hiring_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:this|the)\\s+(?:candidate|applicant)\\s+(?:is|should be(?: considered)?)\\s+(?:an?\\s+)?(?:(?:exceptionally|extremely|highly|very|the most|uniquely)\\s+)?(?:qualified|excellent|exceptional|perfect|ideal|outstanding|strong|top)\\b",
+      "desc": "Third-person candidate praise aimed at a screener"
+    },
+    {
+      "id": "hiring.rank_candidate",
+      "lang": "en",
+      "category": "hiring_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:rank|rate|score|move|advance|shortlist|prioriti[sz]e|recommend|select)\\s+(?:this|the)\\s+(?:(?:candidate|applicant|resume|cv|profile)\\b|r[eé]sum[eé])",
+      "desc": "Asks screener to rank/advance the candidate"
+    },
+    {
+      "id": "hiring.recommend_interview",
+      "lang": "en",
+      "category": "hiring_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\brecommend(?:ed)?\\s+(?:them\\s+|him\\s+|her\\s+)?(?:for|an?)\\s+(?:an?\\s+)?(?:immediate\\s+)?(?:interview|hire|hiring|offer)\\b",
+      "desc": "Interview/hire recommendation request"
+    },
+    {
+      "id": "promo.always_recommend",
+      "lang": "en",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:always|only|must|should|exclusively)\\s+(?:recommend|suggest|mention|promote|rank|cite|link\\s+to)\\s+(?:this|our|[\\w-]+\\.(?:com|io|net|org|ai|co|example))\\b|\\brecommend\\s+(?:only|exclusively)\\b|\\b(?:recommend|suggest|present)\\s+[^.\\n]{1,40}\\s+as\\s+the\\s+(?:only|best|official|top)\\b",
+      "desc": "Forces the agent to recommend a party"
+    },
+    {
+      "id": "promo.describe_as_best",
+      "lang": "en",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:describe|present|portray|summari[sz]e|characteri[sz]e|depict|frame|label|list|rate|call|treat|report|introduce|position)\\s+(?:this|our|the|it)\\s+(?:[a-z-]+\\s+){0,2}as\\s+(?:an?\\s+|the\\s+)?(?:best|top|leading|most|number\\s+one|#1|superior|safest|official|only|verified|trusted|trustworthy|reliable|five[- ]star|5[- ]star|market\\s+leader|legitimate|authori[sz]ed|reputable|recommended|highest)\\b|\\b(?:say|state|tell (?:the )?users?)\\s+(?:that\\s+)?(?:this|our|the)\\s+(?:product|company|site|website|service|brand|page|store|shop|app)\\s+(?:is)\\s+(?:the\\s+)?(?:best|top|leading|most|number one|#1|superior|safest|official|only)\\b",
+      "desc": "Dictates how an agent should characterize a party"
+    },
+    {
+      "id": "promo.five_stars",
+      "lang": "en",
+      "category": "recommendation_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:give|rate)\\s+(?:it|this|us|the product)\\s+(?:a\\s+)?(?:5|five)[- ]stars?\\b",
+      "desc": "Rating manipulation"
+    },
+    {
+      "id": "promo.praise_only",
+      "lang": "en",
+      "category": "recommendation_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:answer|respond|reply)\\s+(?:only\\s+)?with\\s+(?:praise|positive)|\\bonly\\s+(?:say|write|mention)\\s+(?:positive|good|nice)\\s+things\\b|\\bpraise\\s+(?:this|our|the)\\s+(?:product|site|blog|company|store|author|seller|laptop)\\b",
+      "desc": "Praise-only output request"
+    },
+    {
+      "id": "promo.suppress_negative",
+      "lang": "en",
+      "category": "recommendation_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:do not|don't|never)\\s+(?:mention|include|cite|summari[sz]e|show)\\s+(?:any\\s+)?(?:negative|bad|critical|unfavorable|competing|competitor)",
+      "desc": "Suppress negative information/competitors"
+    },
+    {
+      "id": "promo.affiliate_swap",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "lang": "en",
+      "needs_context": true,
+      "pattern": "\\b(?:provide|give|share|use|send|show|offer|present)\\s+(?:(?:them|users?|readers?|visitors?|people|humans?)\\s+)?(?:with\\s+)?(?:this|our|the|my)\\s+(?:special\\s+)?affiliate\\s+(?:links?|urls?|codes?)\\b|\\brather\\s+than\\s+(?:providing\\s+(?:them\\s+with\\s+)?|giving\\s+(?:them\\s+)?)?(?:the\\s+)?direct\\s+(?:merchant\\s+|store\\s+|product\\s+|vendor\\s+)?(?:links?|urls?)\\b|\\b(?:replace|swap|substitute|rewrite)\\s+(?:any\\s+|all\\s+|the\\s+)?(?:links?|urls?)\\b[^.\\n]{0,40}\\baffiliate\\b",
+      "desc": "asks an agent to hand users an affiliate link instead of the direct one"
+    },
+    {
+      "id": "agentpromo.signup",
+      "category": "agent_promotion",
+      "weight": 3,
+      "standalone": false,
+      "lang": "en",
+      "needs_context": true,
+      "pattern": "\\b(?:sign[- ]?up|signup|registration|onboarding|free\\s+trial|pricing|api\\s+keys?|account\\s+creation)\\b[^.\\n]{0,40}?\\b(?:is|are)\\s+(?:at|available\\s+at|located\\s+at|here)\\b|\\bhow\\s+to\\s+(?:sign[- ]?up|register|subscribe|get\\s+started|buy|purchase|integrate)\\b|\\b(?:sign[- ]?up|register|subscribe)\\s+(?:at|via|here|on\\s+our)\\b",
+      "desc": "agent-targeted marketing: where/how an agent should sign up or buy"
+    },
+    {
+      "id": "promo.when_summarizing",
+      "lang": "en",
+      "category": "summarizer_steering",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\bwhen (?:summari[sz]ing|describing|answering questions about|asked about|you summari[sz]e) (?:this|the|our)\\b",
+      "desc": "Steers summarizers"
+    },
+    {
+      "id": "support.grant_refund",
+      "lang": "en",
+      "category": "support_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:approve|issue|grant|process|authori[sz]e)\\s+(?:a\\s+|any\\s+|all\\s+|the\\s+)?(?:full\\s+|immediate\\s+)?(?:refunds?|discounts?|credits?|compensation|exceptions?|upgrades?)(?:\\s+requests?)?\\b",
+      "desc": "Asks a support agent to grant money/benefits",
+      "needs_context": true
+    },
+    {
+      "id": "support.no_verification",
+      "lang": "en",
+      "category": "support_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\bwithout (?:any\\s+)?(?:verification|verifying|checking|asking for (?:proof|id|identification|a receipt))\\b",
+      "desc": "Skip-verification phrasing",
+      "needs_context": true
+    },
+    {
+      "id": "optout.no_training",
+      "lang": "en",
+      "category": "ai_optout",
+      "weight": 3,
+      "standalone": true,
+      "pattern": "\\b(?:do not|don't|must not|may not|not permitted to|not allowed to|prohibited from)\\s+(?:use|train|scrape|crawl|ingest|reproduce)\\b[^.\\n]{0,60}\\b(?:ai|artificial intelligence|machine learning|ml|llms?|training|models?)\\b",
+      "desc": "AI training/scraping opt-out notice (defensive)"
+    },
+    {
+      "id": "optout.training_prohibited",
+      "lang": "en",
+      "category": "ai_optout",
+      "weight": 3,
+      "standalone": true,
+      "pattern": "\\b(?:ai|llm|machine learning)\\s+training\\s+(?:is\\s+)?(?:prohibited|not permitted|forbidden|not allowed|opt[- ]?out)\\b",
+      "desc": "AI training prohibited notice (defensive)"
+    },
+    {
+      "id": "optout.noai_token",
+      "lang": "en",
+      "category": "ai_optout",
+      "weight": 3,
+      "standalone": true,
+      "pattern": "\\bnoai\\b|\\bnoimageai\\b",
+      "desc": "noai / noimageai robots directive (defensive)"
+    },
+    {
+      "id": "restrict.no_authorization",
+      "category": "ai_restriction",
+      "weight": 2,
+      "standalone": false,
+      "lang": "en",
+      "needs_context": true,
+      "pattern": "\\b(?:not|never)\\s+(?:be\\s+)?(?:authori[sz]ed|permitted|allowed|licen[sc]ed|have\\s+(?:authori[sz]ation|permission))\\s+to\\s+(?:scrape|crawl|harvest|copy|index|access|use|train|ingest|reproduce|read)\\b|\\bno\\s+(?:authori[sz]ation|permission)\\s+to\\s+(?:scrape|crawl|harvest|copy|index|access|use|train|ingest)\\b|\\b(?:do\\s+not|don't|must\\s+not|may\\s+not)\\s+(?:attempt\\s+to\\s+)?(?:scrape|crawl|harvest|bypass|circumvent)\\b",
+      "desc": "anti-scrape / no-authorization warning addressed to AI systems (defensive)"
+    },
+    {
+      "id": "imperative.must",
+      "lang": "en",
+      "category": "imperative",
+      "weight": 1,
+      "standalone": false,
+      "pattern": "\\b(?:you must|you should|you will|you are required to|make sure (?:you|to)|always respond|respond only|reply only|reply with|output only|your (?:task|job|goal) is)\\b",
+      "desc": "Second-person imperative"
+    },
+    {
+      "id": "es.addr",
+      "lang": "es",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\bsi\\s+(?:eres|es\\s+usted|usted\\s+es|sois)\\s+(?:una?\\s+)?(?:ia|inteligencia\\s+artificial|modelos?\\s+de\\s+lenguaje|asistentes?(?:\\s+(?:de\\s+ia|virtual(?:es)?))?|agentes?(?:\\s+de\\s+ia)?|chatbots?|bots?|llms?)\\b|\\b(?:nota|mensaje|aviso|instrucciones|atenci[oó]n)\\s*,?\\s+(?:para|a)\\s+(?:la\\s+|el\\s+|los\\s+|las\\s+|cualquier\\s+|todos\\s+los\\s+|todas\\s+las\\s+)?(?:ia|inteligencia\\s+artificial|modelos?\\s+de\\s+lenguaje|asistentes?(?:\\s+(?:de\\s+ia|virtual(?:es)?))?|agentes?(?:\\s+de\\s+ia)?|chatbots?|bots?|llms?)\\b|\\b(?:asistente|agente|modelo)\\s+de\\s+(?:ia|lenguaje)\\s*:",
+      "desc": "Spanish: addressed to an AI"
+    },
+    {
+      "id": "es.override",
+      "lang": "es",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:ignora|ignore|ignorad|ignoren|olvida|olvide|olvidad|descarta|descarte|omite|omita|haz\\s+caso\\s+omiso\\s+(?:de|a)|no\\s+(?:sigas|siga|obedezcas|obedezca))\\s+(?:(?:todas|todos|las|los|tus|sus|de|a)\\s+){0,3}(?:(?:anteriores|previas|originales)\\s+)?(?:instrucciones|indicaciones|órdenes|ordenes|reglas|directrices|pautas|normas|consignas)\\s+(?:anteriores|previas|originales|iniciales|del\\s+sistema|de\\s+arriba|precedentes|que\\s+(?:te|le|os)\\s+(?:dieron|han\\s+dado|dio|ha\\s+dado|recibiste|has\\s+recibido))",
+      "desc": "Spanish: ignore previous instructions"
+    },
+    {
+      "id": "es.override_loose",
+      "lang": "es",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:ignora|ignore|olvida|olvide|descarta|descarte|omite|omita|no\\s+sigas|no\\s+siga|deja\\s+de\\s+seguir|deje\\s+de\\s+seguir|haz\\s+caso\\s+omiso\\s+(?:de|a))\\s+[^.\\n]{0,25}?(?:instrucciones|indicaciones|órdenes|reglas|directrices|pautas|lo\\s+que\\s+(?:te|le)\\s+(?:pidió|pidio|dijo|indicó|indico|pidieron|dijeron))",
+      "desc": "Spanish: paraphrased override"
+    },
+    {
+      "id": "es.conceal",
+      "lang": "es",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\bno\\s+(?:se\\s+lo\\s+|le\\s+|les\\s+|lo\\s+)?(?:digas|diga|menciones|mencione|reveles|revele|informes|informe|cuentes|cuente|comuniques)\\s+(?:esto\\s+|nada\\s+|este\\s+mensaje\\s+)?(?:al|a\\s+los|a\\s+la|a\\s+las|a\\s+ningún|a\\s+ningun)\\s+(?:usuari[oa]s?|clientes?|lector(?:es)?|visitantes?)\\b",
+      "desc": "Spanish: do not tell the user"
+    },
+    {
+      "id": "es.exfil",
+      "lang": "es",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:envía|envia|envíe|envie|manda|mande|reenvía|reenvia|reenvíe|transmite|sube|filtra)\\s[^.\\n]{0,60}(?:conversación|conversacion|historial|contraseñas?|contrasenas?|credenciales|datos\\s+(?:del|de\\s+los)\\s+usuari|tarjeta|prompt\\s+del\\s+sistema)",
+      "desc": "Spanish: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "es.steer_user",
+      "lang": "es",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:dile|dígale|digale|di|diga|informa|informe|convence|convenza|recomienda|recomiende|aconseja|aconseje|pide|pídele|pidele)\\s+(?:al|a\\s+los|a\\s+la|a\\s+las)\\s+(?:usuari[oa]s?|clientes?|lector(?:es)?|visitantes?|compradores?)\\s+(?:que|a)\\b",
+      "desc": "Spanish: tell the user that/to"
+    },
+    {
+      "id": "es.promo",
+      "lang": "es",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:di|diga|decid|responde|responda|afirma|afirme|indica|indique|asegura|asegure|presenta|presente)\\s+que\\s+(?:este|esta|nuestr[oa])\\s+[^.\\n]{0,30}?(?:es|son)\\s+(?:el|la|los|las)?\\s*(?:mejor|oficial|únic[oa]|unic[oa]|más\\s+segur[oa]|mas\\s+segur[oa]|líder|lider)|\\b(?:recomienda|recomiende|menciona|mencione|promociona)\\s+(?:únicamente|unicamente|solo|sólo|solamente|siempre)\\b|\\bcalific(?:a|ar|ad|alo|ala)\\s+(?:este|esta|nuestr[oa])\\s+[^.\\n]{0,20}?con\\s+(?:cinco|5)\\s+estrellas",
+      "desc": "Spanish: recommendation manipulation"
+    },
+    {
+      "id": "fr.addr",
+      "lang": "fr",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\bsi\\s+(?:tu\\s+es|vous\\s+[eê]tes)\\s+(?:une?\\s+)?(?:ia|intelligence\\s+artificielle|mod[eè]les?\\s+de\\s+langage|assistants?(?:\\s+(?:ia|virtuels?))?|agents?(?:\\s+ia)?|robots?|chatbots?|bots?|llms?)\\b|\\b(?:note|message|instructions?|consignes?|avis|attention)\\s*,?\\s+(?:pour|à|a|aux|destinée?s?\\s+aux?)\\s+(?:l['’]\\s*|les\\s+|la\\s+|le\\s+|tout\\s+|toute\\s+|tous\\s+les\\s+)?(?:ia|intelligence\\s+artificielle|mod[eè]les?\\s+de\\s+langage|assistants?(?:\\s+(?:ia|virtuels?))?|agents?(?:\\s+ia)?|robots?|chatbots?|bots?|llms?)\\b",
+      "desc": "French: addressed to an AI"
+    },
+    {
+      "id": "fr.override",
+      "lang": "fr",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:ignore[zs]?|oublie[zs]?|ne\\s+tiens\\s+pas\\s+compte\\s+des|ne\\s+tenez\\s+pas\\s+compte\\s+des|fais\\s+abstraction\\s+des|faites\\s+abstraction\\s+des|n['’]\\s*(?:obéis|obeis|obéissez|obeissez)\\s+plus\\s+aux)\\s+(?:(?:toutes|tous|les|tes|vos|ces|des)\\s+){0,3}(?:instructions|consignes|directives|règles|regles|ordres|indications)\\s+(?:précédentes|precedentes|antérieures|anterieures|initiales|originales|ci-dessus|du\\s+système|du\\s+systeme|reçues|recues|données|donnees)",
+      "desc": "French: ignore previous instructions"
+    },
+    {
+      "id": "fr.override_loose",
+      "lang": "fr",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:ignore[zs]?|oublie[zs]?|ne\\s+suis\\s+plus|ne\\s+suivez\\s+plus|cesse[zs]?\\s+de\\s+suivre)\\s+[^.\\n]{0,25}?(?:instructions|consignes|directives|règles|regles|ordres|ce\\s+que\\s+(?:l['’]\\s*utilisateur|on)\\s+(?:t['’]\\s*a|vous\\s+a)\\s+demandé)",
+      "desc": "French: paraphrased override"
+    },
+    {
+      "id": "fr.conceal",
+      "lang": "fr",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\bne\\s+(?:le\\s+|la\\s+|les\\s+|l['’]\\s*|lui\\s+|leur\\s+|en\\s+)?(?:dis|dites|mentionne[sz]?|révèle[sz]?|revele[sz]?|signale[sz]?|parle[sz]?|informe[sz]?)\\s+(?:pas|rien|jamais)\\b[^.\\n]{0,30}?(?:utilisat(?:eur|rice)s?|clients?|lecteurs?|visiteurs?)",
+      "desc": "French: do not tell the user"
+    },
+    {
+      "id": "fr.exfil",
+      "lang": "fr",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:envoie[sz]?|envoyez|transmets|transmettez|transfère|transfere|transférez|transferez|partage[zs]?|copie[zs]?|téléverse[zs]?)\\s[^.\\n]{0,60}(?:conversation|historique|mots?\\s+de\\s+passe|identifiants|données\\s+(?:de\\s+l['’]\\s*utilisateur|personnelles)|donnees\\s+personnelles|carte\\s+bancaire|prompt\\s+système|prompt\\s+systeme)",
+      "desc": "French: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "fr.promo",
+      "lang": "fr",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:dis|dites|indique[zs]?|affirme[zs]?|réponds|répondez|reponds|repondez|explique[zs]?|recommande[zs]?|conseille[zs]?)\\s+(?:(?:à|a)\\s+l['’]\\s*utilisat(?:eur|rice)\\s+)?que\\s+(?:ce|cette|notre|nos)\\s+[^.\\n]{0,40}?(?:est|sont)\\s+(?:la|le|les|l['’])?\\s*(?:meilleur|meilleure|seul|seule|officiel|officielle|référence|reference|source\\s+officielle|plus\\s+s[uû]r)",
+      "desc": "French: recommendation manipulation"
+    },
+    {
+      "id": "fr.steer_user",
+      "lang": "fr",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:dis|dites|demande[zs]?|conseille[zs]?|incite[zs]?|pousse[zs]?)\\s+(?:à|a)\\s+l['’]\\s*(?:utilisat(?:eur|rice)|client|lecteur|visiteur)\\s+(?:de|d['’]|que)",
+      "desc": "French: tell the user to"
+    },
+    {
+      "id": "de.addr",
+      "lang": "de",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:wenn|falls)\\s+(?:du|sie)\\s+(?:eine?\\s+|ein\\s+)?(?:ki|künstliche\\s+intelligenz|kuenstliche\\s+intelligenz|sprachmodell(?:e)?|ki-(?:assistent(?:en)?|agent(?:en)?|modell(?:e)?|system(?:e)?)|assistent(?:en)?|agent(?:en)?|chatbots?|bots?|llms?)\\s+(?:bist|sind)\\b|\\b(?:hinweis|nachricht|anweisung(?:en)?|achtung|info)\\s*,?\\s+(?:an|für|fuer)\\s+(?:die\\s+|alle\\s+|jede\\s+|jeden\\s+|den\\s+)?(?:ki|künstliche\\s+intelligenz|kuenstliche\\s+intelligenz|sprachmodell(?:e)?|ki-(?:assistent(?:en)?|agent(?:en)?|modell(?:e)?|system(?:e)?)|assistent(?:en)?|agent(?:en)?|chatbots?|bots?|llms?)\\b",
+      "desc": "German: addressed to an AI"
+    },
+    {
+      "id": "de.override",
+      "lang": "de",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:ignoriere|ignorier|ignorieren\\s+sie|vergiss|vergessen\\s+sie|missachte|missachten\\s+sie|verwirf|verwerfen\\s+sie)\\s+(?:(?:alle|sämtliche|saemtliche|deine|ihre|die|der)\\s+){0,2}(?:bisherigen|vorherigen|vorigen|früheren|frueheren|ursprünglichen|urspruenglichen|obigen|vorangegangenen|vorangehenden|alten|gegebenen)\\s+(?:anweisungen|instruktionen|befehle|regeln|vorgaben|anordnungen)",
+      "desc": "German: ignore previous instructions"
+    },
+    {
+      "id": "de.override_loose",
+      "lang": "de",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:ignoriere|ignorieren\\s+sie|vergiss|vergessen\\s+sie|missachte|befolge\\s+nicht|befolgen\\s+sie\\s+nicht)\\s+[^.\\n]{0,25}?(?:anweisungen|instruktionen|befehle|regeln|vorgaben)",
+      "desc": "German: paraphrased override"
+    },
+    {
+      "id": "de.conceal",
+      "lang": "de",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:sag|sage|sagen\\s+sie|erzähl|erzaehl|erzähle|erzählen\\s+sie|erwähne|erwaehne|erwähnen\\s+sie|verrate|verraten\\s+sie|teile|teilen\\s+sie)\\s+(?:(?:dem|den|der|die)\\s+)?(?:nutzer(?:in|n)?|benutzer(?:in|n)?|anwender(?:in|n)?|kunden?|kundin|leser(?:in|n)?)\\s+(?:(?:davon|das|dies|es)\\s+)?(?:nichts|nicht)\\b",
+      "desc": "German: do not tell the user"
+    },
+    {
+      "id": "de.exfil",
+      "lang": "de",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:\\b(?:sende|senden\\s+sie|schicke|schick|schicken\\s+sie|leite|leiten\\s+sie|uebermittle|lade)|übermittle|übermitteln\\s+sie)\\s[^.\\n]{0,60}(?:unterhaltung|gesprächsverlauf|gespraechsverlauf|chatverlauf|passwort|passwörter|passwoerter|zugangsdaten|benutzerdaten|kreditkarte|systemprompt|system-prompt)",
+      "desc": "German: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "de.promo",
+      "lang": "de",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:empfiehl|empfehle|empfehlen\\s+sie)\\s+(?:ausschließlich|ausschliesslich|nur|immer)\\b|\\b(?:sag|sage|sagen\\s+sie|behaupte|behaupten\\s+sie)\\s*,?\\s+dass\\s+(?:dieser|diese|dieses|unser|unsere)\\s+[^.\\n]{0,30}?(?:der|die|das)\\s+(?:beste|einzige|offizielle|sicherste)",
+      "desc": "German: recommendation manipulation"
+    },
+    {
+      "id": "de.steer_user",
+      "lang": "de",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:sag|sage|sagen\\s+sie|empfiehl|empfehlen\\s+sie|rate|raten\\s+sie)\\s+(?:dem|den|der)\\s+(?:nutzer(?:in|n)?|benutzer(?:in|n)?|kunden?|leser(?:in|n)?)\\s*,?\\s+(?:dass|er\\s+solle|sie\\s+solle|zu)\\b",
+      "desc": "German: tell the user that"
+    },
+    {
+      "id": "pt.addr",
+      "lang": "pt",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\bse\\s+(?:você|voce|vc|tu)\\s+(?:é|e|és|es|for)\\s+(?:uma?\\s+)?(?:ia|inteligência\\s+artificial|inteligencia\\s+artificial|modelos?\\s+de\\s+linguagem|assistentes?(?:\\s+(?:de\\s+ia|virtua(?:l|is)))?|agentes?(?:\\s+de\\s+ia)?|chatbots?|bots?|robos?|llms?)\\b|\\b(?:nota|mensagem|aviso|instruções|instrucoes|atenção|atencao)\\s*,?\\s+(?:(?:para|à|a|aos|às|ao)\\s+)?(?:a\\s+|o\\s+|os\\s+|as\\s+|qualquer\\s+|todos\\s+os\\s+|todas\\s+as\\s+)?(?:ia|inteligência\\s+artificial|inteligencia\\s+artificial|modelos?\\s+de\\s+linguagem|assistentes?(?:\\s+(?:de\\s+ia|virtua(?:l|is)))?|agentes?(?:\\s+de\\s+ia)?|chatbots?|bots?|robos?|llms?)\\b",
+      "desc": "Portuguese: addressed to an AI"
+    },
+    {
+      "id": "pt.override",
+      "lang": "pt",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:ignore|ignora|ignorem|esqueça|esqueca|esqueçam|desconsidere|desconsidera|despreze|descarte)\\s+(?:(?:todas|todos|as|os|suas|tuas|de)\\s+){0,3}(?:instruções|instrucoes|orientações|orientacoes|regras|diretrizes|ordens|indicações|indicacoes)\\s+(?:anteriores|prévias|previas|originais|iniciais|do\\s+sistema|acima|recebidas)",
+      "desc": "Portuguese: ignore previous instructions"
+    },
+    {
+      "id": "pt.override_loose",
+      "lang": "pt",
+      "category": "instruction_override",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:ignore|ignora|esqueça|esqueca|desconsidere|desconsidera|não\\s+siga|nao\\s+siga|pare\\s+de\\s+seguir|deixe\\s+de\\s+seguir)\\s+[^.\\n]{0,25}?(?:instruções|instrucoes|orientações|orientacoes|regras|diretrizes|ordens|o\\s+que\\s+o\\s+(?:usuário|usuario)\\s+pediu)",
+      "desc": "Portuguese: paraphrased override"
+    },
+    {
+      "id": "pt.conceal",
+      "lang": "pt",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:não|nao)\\s+(?:conte|diga|mencione|revele|informe|avise|fale)\\s+(?:isso\\s+|nada\\s+|sobre\\s+(?:isso|esta\\s+(?:nota|mensagem))\\s+)?(?:ao|aos|à|a|o|os|para\\s+o)\\s+(?:usuári[oa]s?|usuari[oa]s?|utilizador(?:es)?|clientes?|leitor(?:es)?)",
+      "desc": "Portuguese: do not tell the user"
+    },
+    {
+      "id": "pt.exfil",
+      "lang": "pt",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:envie|envia|mande|manda|encaminhe|encaminha|transmita|compartilhe|copie)\\s[^.\\n]{0,60}(?:conversa|histórico|historico|senhas?|credenciais|dados\\s+do\\s+(?:usuário|usuario)|cartão|cartao|prompt\\s+do\\s+sistema)",
+      "desc": "Portuguese: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "pt.promo",
+      "lang": "pt",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "\\b(?:diga|diz|afirme|responda|indique|apresente)\\s+que\\s+(?:este|esta|nosso|nossa)\\s+[^.\\n]{0,30}?(?:é|e)\\s+(?:o|a)\\s+(?:melhor|oficial|únic[oa]|unic[oa]|mais\\s+segur[oa]|líder|lider)",
+      "desc": "Portuguese: recommendation manipulation"
+    },
+    {
+      "id": "pt.steer_user",
+      "lang": "pt",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:diga|fale|informe|convença|convenca|peça|peca|recomende|aconselhe)\\s+(?:ao|aos|à|para\\s+o|para\\s+a)\\s+(?:usuári[oa]s?|usuari[oa]s?|clientes?|leitor(?:es)?|visitantes?)\\s+(?:que|para)\\b",
+      "desc": "Portuguese: tell the user that/to"
+    },
+    {
+      "id": "zh.addr",
+      "lang": "zh",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:如果|假如|若|倘若)(?:你|您)是[^。！？\\n]{0,6}(?:AI|人工智能|人工智慧|大语言模型|大語言模型|语言模型|語言模型|大模型|助手|助理|智能体|智能體|代理|聊天机器人|聊天機器人|机器人|機器人|LLM|GPT)|(?:致|给|給|写给|寫給)(?:所有|任何|各位|全体|全體)?(?:的)?(?:AI|人工智能|人工智慧|大语言模型|大語言模型|语言模型|語言模型|大模型|助手|助理|智能体|智能體|代理|聊天机器人|聊天機器人|机器人|機器人|LLM|GPT)|(?:AI|人工智能|人工智慧|大语言模型|大語言模型|语言模型|語言模型|大模型|助手|助理|智能体|智能體|代理|聊天机器人|聊天機器人|机器人|機器人|LLM|GPT)(?:请注意|請注意)",
+      "desc": "Chinese: addressed to an AI"
+    },
+    {
+      "id": "zh.override",
+      "lang": "zh",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "(?:忽略|无视|無視|忽视|忽視|不要理会|不要理會|不用理会|忘记|忘記|忘掉|抛弃|拋棄|放弃|放棄)[^。！？\\n]{0,10}(?:之前|以前|先前|上面|上述|此前|原来|原來|原始|以上|前面|系统|系統)[^。！？\\n]{0,6}(?:指令|指示|说明|說明|提示词|提示詞|提示|规则|規則|命令|设定|設定|要求)",
+      "desc": "Chinese: ignore previous instructions"
+    },
+    {
+      "id": "zh.conceal",
+      "lang": "zh",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:不要|别|別|切勿|请勿|請勿|不可|不得)(?:向|对|對)?(?:用户|用戶|使用者|读者|讀者|客户|客戶|访客|訪客)?(?:告诉|告訴|透露|提及|提起|通知)(?:用户|用戶|使用者|读者|讀者|客户|客戶)",
+      "desc": "Chinese: do not tell the user"
+    },
+    {
+      "id": "zh.exfil",
+      "lang": "zh",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:发送|發送|转发|轉發|上传|上傳|传送|傳送|发到|發到|提交|泄露|洩露)[^。！？\\n]{0,30}(?:对话|對話|聊天记录|聊天記錄|密码|密碼|凭证|憑證|用户数据|用戶數據|用户信息|用戶資訊|系统提示|系統提示|信用卡)|(?:把|将|將)(?:用户|用戶|使用者)?(?:的)?(?:对话|對話|聊天记录|聊天記錄|密码|密碼|凭证|憑證|信用卡|地址)[^。！？\\n]{0,20}(?:发送|發送|转发|轉發|上传|上傳|传送|傳送|发到|發到)",
+      "desc": "Chinese: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "zh.promo",
+      "lang": "zh",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:告诉|告訴|声称|聲稱|说|說|表示|回答)(?:用户|用戶|使用者)?[^。！？\\n]{0,4}(?:本站|本网站|本網站|这个网站|這個網站|该网站|該網站|我们的产品|我們的產品|本产品|本產品|本店)是(?:唯一|最好|官方|最佳|最安全)",
+      "desc": "Chinese: recommendation manipulation"
+    },
+    {
+      "id": "ja.addr",
+      "lang": "ja",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:もし)?あなたが[^。\\n]{0,6}(?:(?:生成)?AI\\s*(?:アシスタント|エージェント|モデル)?|人工知能|大規模言語モデル|言語モデル|アシスタント|エージェント|チャットボット|ボット|LLM)(?:なら|であれば|である場合|の場合)|(?:(?:生成)?AI\\s*(?:アシスタント|エージェント|モデル)?|人工知能|大規模言語モデル|言語モデル|アシスタント|エージェント|チャットボット|ボット|LLM)(?:への|に対する|向けの)(?:指示|メッセージ|お知らせ|注意|命令|注記)|(?:(?:生成)?AI\\s*(?:アシスタント|エージェント|モデル)?|人工知能|大規模言語モデル|言語モデル|アシスタント|エージェント|チャットボット|ボット|LLM)(?:各位|の皆様|の皆さん)",
+      "desc": "Japanese: addressed to an AI"
+    },
+    {
+      "id": "ja.override",
+      "lang": "ja",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "(?:これまでの|以前の|前の|上記の|先の|元の|すべての|全ての|システムの|過去の|最初の)[^。\\n]{0,10}(?:指示|命令|指令|ルール|プロンプト|設定|制約)(?:を|は)?(?:すべて|全て|全部)?(?:無視|忘れ|破棄|取り消)",
+      "desc": "Japanese: ignore previous instructions"
+    },
+    {
+      "id": "ja.conceal",
+      "lang": "ja",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:ユーザー|ユーザ|利用者|読者|顧客|お客様)(?:に|には)[^。\\n]{0,12}(?:伝えないで|言わないで|教えないで|知らせないで|言及しないで|明かさないで|伝えては(?:いけ|なり)ません|話さないで)",
+      "desc": "Japanese: do not tell the user"
+    },
+    {
+      "id": "ja.exfil",
+      "lang": "ja",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:会話|チャット履歴|会話履歴|パスワード|認証情報|ユーザーデータ|個人情報|システムプロンプト|クレジットカード)[^。\\n]{0,40}(?:送信|転送|アップロード|送って)",
+      "desc": "Japanese: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "ja.promo",
+      "lang": "ja",
+      "category": "recommendation_manipulation",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:必ず|常に)[^。\\n]{0,10}(?:推薦|おすすめ|推奨)|(?:最高評価|星5|5つ星|五つ星)(?:として|で|に)?[^。\\n]{0,6}(?:紹介|評価|推薦)",
+      "desc": "Japanese: recommendation manipulation"
+    },
+    {
+      "id": "ru.addr",
+      "lang": "ru",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:^|[^а-яё])(?:если\\s+(?:ты|вы)\\s+(?:[—–-]\\s+)?(?:являешься\\s+|являетесь\\s+)?(?:ии-(?:ассистент|агент|модел)[а-яё]*|ии|искусственн[а-яё]*\\s+интеллект[а-яё]*|языков[а-яё]*\\s+модел[а-яё]*|нейросет[а-яё]*|ассистент[а-яё]*|агент[а-яё]*|чат-бот[а-яё]*|бот(?:ы|ов|у|ам)?|llm)(?![а-яё])|(?:примечание|сообщение|инструкция|инструкции|внимание|обращение|заметка)\\s*,?\\s+(?:(?:для|к)\\s+)?(?:всех\\s+|любых\\s+|любого\\s+)?(?:ии-(?:ассистент|агент|модел)[а-яё]*|ии|искусственн[а-яё]*\\s+интеллект[а-яё]*|языков[а-яё]*\\s+модел[а-яё]*|нейросет[а-яё]*|ассистент[а-яё]*|агент[а-яё]*|чат-бот[а-яё]*|бот(?:ы|ов|у|ам)?|llm)(?![а-яё]))",
+      "desc": "Russian: addressed to an AI"
+    },
+    {
+      "id": "ru.override",
+      "lang": "ru",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "(?:^|[^а-яё])(?:игнорируй|игнорируйте|проигнорируй|проигнорируйте|забудь|забудьте|отбрось|отбросьте|не\\s+обращай\\s+внимания\\s+на|не\\s+обращайте\\s+внимания\\s+на|не\\s+выполняй|не\\s+выполняйте)\\s+(?:все\\s+|всё\\s+|свои\\s+|ваши\\s+)?(?:предыдущие|прежние|предшествующие|изначальные|исходные|системные|вышеуказанные|прошлые|старые|ранее\\s+(?:данные|полученные))\\s+(?:инструкции|указания|команды|правила|промпты|установки|распоряжения)",
+      "desc": "Russian: ignore previous instructions"
+    },
+    {
+      "id": "ru.conceal",
+      "lang": "ru",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:^|[^а-яё])не\\s+(?:говори|говорите|сообщай|сообщайте|рассказывай|рассказывайте|упоминай|упоминайте|показывай|показывайте)\\s+(?:об\\s+этом\\s+|это\\s+|ничего\\s+)?(?:пользовател[а-яё]*|читател[а-яё]*|клиент[а-яё]*)",
+      "desc": "Russian: do not tell the user"
+    },
+    {
+      "id": "ru.exfil",
+      "lang": "ru",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:^|[^а-яё])(?:отправь|отправьте|перешли|перешлите|передай|передайте|загрузи|загрузите|скопируй|вышли|вышлите)\\s[^.\\n]{0,60}?(?:переписк[а-яё]*|истори[а-яё]*\\s+(?:чата|переписки|диалога|сообщений)|парол[а-яё]*|уч[её]тн[а-яё]*\\s+данн[а-яё]*|данные\\s+пользовател[а-яё]*|системн[а-яё]*\\s+промпт[а-яё]*|номер\\s+карты)",
+      "desc": "Russian: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "ru.steer_user",
+      "lang": "ru",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:^|[^а-яё])(?:сообщи|сообщите|скажи|скажите|ответь|ответьте|убеди|убедите|напиши|напишите)\\s+(?:пользовател[а-яё]*\\s*)?,?\\s*что\\s+(?:этот\\s+)?(?:сайт|наш[а-яё]*|продукт|магазин|компания|сервис)",
+      "desc": "Russian: tell the user that"
+    },
+    {
+      "id": "hi.addr",
+      "lang": "hi",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:यदि|अगर)\\s+(?:आप|तुम|तू)\\s+(?:एक\\s+)?(?:एआई|ए\\.आई\\.|AI|कृत्रिम\\s+बुद्धि(?:मत्ता|मता)?|भाषा\\s+मॉडल|लैंग्वेज\\s+मॉडल|सहायक|एजेंट|बॉट|चैटबॉट|एलएलएम)(?:\\s+(?:सहायक|एजेंट|मॉडल))?\\s+(?:हैं|हो|है)|(?:एआई|ए\\.आई\\.|AI|कृत्रिम\\s+बुद्धि(?:मत्ता|मता)?|भाषा\\s+मॉडल|लैंग्वेज\\s+मॉडल|सहायक|एजेंट|बॉट|चैटबॉट|एलएलएम)\\s+(?:के\\s+लिए|को)\\s+(?:नोट|संदेश|निर्देश|सूचना)",
+      "desc": "Hindi: addressed to an AI"
+    },
+    {
+      "id": "hi.override",
+      "lang": "hi",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "(?:पिछले|पहले\\s+के|पूर्व|ऊपर\\s+के|ऊपर\\s+दिए\\s+गए|मूल|पुराने|सिस्टम\\s+के)\\s+(?:सभी\\s+|सारे\\s+)?(?:निर्देशों|निर्देश|आदेशों|आदेश|नियमों|नियम|प्रॉम्प्ट)\\s*(?:को\\s+)?(?:अनदेखा|नज़?रअंदाज़?|भूल|इग्नोर)",
+      "desc": "Hindi: ignore previous instructions"
+    },
+    {
+      "id": "hi.conceal",
+      "lang": "hi",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:उपयोगकर्ता|यूज़?र|पाठक|ग्राहक)\\s+को\\s+(?:यह\\s+|इसके\\s+बारे\\s+में\\s+|इस\\s+(?:संदेश|बात)\\s+के\\s+बारे\\s+में\\s+|कुछ\\s+भी\\s+)?(?:न|मत|नहीं)\\s+(?:बताएं|बताएँ|बताना|बताओ|बताइए|बताइये)",
+      "desc": "Hindi: do not tell the user"
+    },
+    {
+      "id": "hi.exfil",
+      "lang": "hi",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:बातचीत|चैट\\s+इतिहास|वार्तालाप|पासवर्ड|क्रेडेंशियल|उपयोगकर्ता\\s+का\\s+डेटा|कार्ड\\s+नंबर)[^।\\n]{0,40}(?:भेजें|भेजो|भेज\\s+दें|भेजिए|फॉरवर्ड\\s+करें|अपलोड\\s+करें)",
+      "desc": "Hindi: send user data",
+      "needs_context": true
+    },
+    {
+      "id": "hi.steer_user",
+      "lang": "hi",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:उपयोगकर्ता|यूज़?र|पाठक|ग्राहक)\\s+को\\s+(?:बताएं|बताएँ|बताइए|कहें|कहिए)\\s+कि",
+      "desc": "Hindi: tell the user that"
+    },
+    {
+      "id": "ar.addr",
+      "lang": "ar",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:إذا|اذا|إن|لو)\\s+كنت\\s+(?:[؀-ۿ]+\\s+)?(?:ذكاء[ً-ْ]*\\s+اصطناعي[ً-ْ]*|الذكاء\\s+الاصطناعي|نموذج[ً-ْ]*\\s+(?:لغوي|ذكاء)|نماذج\\s+(?:الذكاء\\s+الاصطناعي|لغوية)|مساعد[ً-ْ]*(?:\\s+ذكي)?|وكيل[ً-ْ]*|روبوت|بوت|AI)|(?:ملاحظة|رسالة|تعليمات|تنبيه)\\s*(?:إلى|الى|لـ|ل)?\\s*(?:أي\\s+|جميع\\s+|كل\\s+)?(?:ذكاء[ً-ْ]*\\s+اصطناعي[ً-ْ]*|الذكاء\\s+الاصطناعي|نموذج[ً-ْ]*\\s+(?:لغوي|ذكاء)|نماذج\\s+(?:الذكاء\\s+الاصطناعي|لغوية)|مساعد[ً-ْ]*(?:\\s+ذكي)?|وكيل[ً-ْ]*|روبوت|بوت|AI)",
+      "desc": "Arabic: addressed to an AI"
+    },
+    {
+      "id": "ar.override",
+      "lang": "ar",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "(?:تجاهل|تجاهلي|تجاهلوا|انس|انسى|أهمل|اهمل|أهملي|لا\\s+تتبع|لا\\s+تلتزم\\s+ب)[ً-ْ]*\\s+(?:جميع\\s+|كل\\s+)?(?:التعليمات|الإرشادات|الارشادات|الأوامر|الاوامر|القواعد|التوجيهات)\\s+(?:السابقة|الأصلية|الاصلية|المسبقة|الأولى|الاولى|أعلاه|اعلاه|القديمة)",
+      "desc": "Arabic: ignore previous instructions"
+    },
+    {
+      "id": "ar.conceal",
+      "lang": "ar",
+      "category": "concealment",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:لا|ولا)\\s+(?:تخبر|تخبري|تخبروا|تذكر|تكشف|تبلغ|تعلم)[ً-ْ]*\\s+(?:المستخدم|المستخدمين|القارئ|العميل|الزائر)",
+      "desc": "Arabic: do not tell the user"
+    },
+    {
+      "id": "ar.exfil",
+      "lang": "ar",
+      "category": "data_exfiltration",
+      "weight": 3,
+      "standalone": false,
+      "pattern": "(?:أرسل|ارسل|أرسلي|ابعث|انقل|شارك|ارفع)[ً-ْ]*\\s[^.\\n]{0,60}?(?:المحادثة|سجل\\s+المحادثة|سجل\\s+الدردشة|كلمة\\s+المرور|كلمات\\s+المرور|بيانات\\s+الاعتماد|بيانات\\s+المستخدم|البطاقة)",
+      "desc": "Arabic: send user data",
+      "needs_context": true
+    }
+  ]
+}

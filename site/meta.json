@@ -1,0 +1,143 @@
+{
+  "feed": "InjectionWatch",
+  "version": "0.3.0",
+  "rules_version": "0.3.0",
+  "generated_at": "2026-10-12T19:24:34+00:00",
+  "license": "CC-BY-4.0",
+  "source": "https://github.com/DevPatel3547/injectionwatch",
+  "warning": "payload_excerpt values are UNTRUSTED attacker-controlled text (truncated, URLs defanged). Do not insert them into an LLM prompt without isolation.",
+  "data_note": "Common Crawl CC-MAIN-2026-39 sample: 20 random WARCs, 426,318 HTML pages, scanned 2026-10-12 with InjectionWatch v0.3 (static HTML only). Only hand-reviewed true positives are listed (one reviewer). ai_optout counts are unreviewed detector signals. Absence from this feed never means a site is safe.",
+  "count": 7,
+  "flagged": 5,
+  "published_severities": [
+    "defensive",
+    "promotional",
+    "manipulative",
+    "malicious"
+  ],
+  "reviewed_only": true,
+  "published_by_severity": {
+    "manipulative": 5,
+    "defensive": 1,
+    "promotional": 1
+  },
+  "published_by_category": {
+    "recommendation_manipulation": 1,
+    "instruction_override": 4,
+    "ai_restriction": 1,
+    "tool_invocation": 1
+  },
+  "published_by_location": {
+    "comment": 1,
+    "hidden_css": 2,
+    "visible": 3,
+    "attribute": 1
+  },
+  "published_hosts": 5,
+  "signals": {
+    "ai_optout_entries": 308,
+    "ai_optout_hosts": 177
+  },
+  "stats": {
+    "entries_active": 324,
+    "entries_total": 324,
+    "hosts_with_entries": 189,
+    "urls_crawled": 0,
+    "fetch_attempts": 0,
+    "fetch_ok": 0,
+    "robots_disallowed": 0,
+    "fetch_errors": 0,
+    "submissions_unverified": 0,
+    "by_category": {
+      "ai_optout": 308,
+      "instruction_override": 5,
+      "role_injection": 4,
+      "user_manipulation": 2,
+      "tool_invocation": 2,
+      "recommendation_manipulation": 1,
+      "data_exfiltration": 1,
+      "ai_restriction": 1
+    },
+    "by_intent": {
+      "defensive": 309,
+      "manipulative": 12,
+      "malicious": 3
+    },
+    "by_location": {
+      "meta": 256,
+      "http_header": 43,
+      "jsonld": 7,
+      "hidden_css": 7,
+      "comment": 6,
+      "visible": 3,
+      "attribute": 2
+    },
+    "by_target": {
+      "crawlers": 309,
+      "agents": 11,
+      "summarizers": 3,
+      "support_bots": 1
+    },
+    "by_severity": {
+      "ai_optout": 308,
+      "benign": 9,
+      "manipulative": 5,
+      "promotional": 1,
+      "defensive": 1
+    },
+    "signals": {
+      "ai_optout_entries": 308,
+      "ai_optout_hosts": 177
+    },
+    "reviewed": {
+      "unreviewed": 308,
+      "false_positive": 9,
+      "true_positive": 7
+    }
+  },
+  "shards": 5,
+  "shard_keys": [
+    "1b",
+    "2e",
+    "39",
+    "ab",
+    "ae"
+  ],
+  "shard_scheme": "sha256(lowercase host)[:2] -> lookup/<xx>.json",
+  "recent_scans": [
+    {
+      "started_at": "2026-10-12T14:43:35+00:00",
+      "finished_at": "2026-10-12T16:47:10+00:00",
+      "inputs": [
+        "CC-MAIN-20260911064402-20260911094402-00304.warc.gz",
+        "CC-MAIN-20260904161806-20260904191806-00035.warc.gz",
+        "CC-MAIN-20260905073245-20260905103245-00613.warc.gz",
+        "CC-MAIN-20260904131603-20260904161603-00186.warc.gz",
+        "CC-MAIN-20260905043015-20260905073015-00656.warc.gz",
+        "CC-MAIN-20260913194028-20260913224028-00657.warc.gz",
+        "CC-MAIN-20260917025921-20260917055921-00691.warc.gz",
+        "CC-MAIN-20260913072935-20260913102935-00622.warc.gz",
+        "CC-MAIN-20260915142231-20260915172231-00670.warc.gz",
+        "CC-MAIN-20260905133841-20260905163841-00997.warc.gz",
+        "CC-MAIN-20260908053654-20260908083654-00176.warc.gz",
+        "CC-MAIN-20260911003841-20260911033841-00626.warc.gz",
+        "CC-MAIN-20260905073245-20260905103245-00585.warc.gz",
+        "CC-MAIN-20260907082029-20260907112029-00389.warc.gz",
+        "CC-MAIN-20260908083825-20260908113825-00140.warc.gz",
+        "CC-MAIN-20260913163800-20260913193800-00925.warc.gz",
+        "CC-MAIN-20260913194028-20260913224028-00379.warc.gz",
+        "CC-MAIN-20260908083825-20260908113825-00542.warc.gz",
+        "CC-MAIN-20260905164208-20260905194208-00791.warc.gz",
+        "CC-MAIN-20260914140128-20260914170128-00611.warc.gz"
+      ],
+      "stats": {
+        "html_pages": 426318,
+        "pages_scanned": 426318,
+        "bytes_payload": null,
+        "errors": null,
+        "findings": 336,
+        "pages_flagged": 14
+      }
+    }
+  ]
+}

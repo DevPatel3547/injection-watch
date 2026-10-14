@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[api,mcp,render,dev]'
+          npm install -g typescript@5
+          python -m playwright install --with-deps chromium
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Type check (mypy)
+        run: mypy
+      - name: Build extension
+        run: make ext
+      - name: Tests + coverage (>= 85%)
+        run: pytest -q --cov --cov-report=term --cov-report=xml
+      - name: Held-out evaluation (reported, not gated)
+        run: python -m injectionwatch eval --rendered --json-out reports/eval/ci.json
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: coverage-and-eval
+          path: |
+            coverage.xml
+            reports/eval/ci.json
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t injectionwatch:ci .
+      - name: Smoke test
+        run: |
+          docker run -d --name iw -p 8000:8000 injectionwatch:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz && break; sleep 1; done
+          curl -fsS "http://127.0.0.1:8000/v1/check?url=https://example.com/" | grep -q '"verdict"'
+          docker rm -f iw

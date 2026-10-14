@@ -1,0 +1,114 @@
+# TEMPLATE - NOT ACTIVE.
+#
+# Monthly zero-cost pipeline: download a few Common Crawl WARC files from the latest crawl, scan them,
+# merge with the previously published feed, and publish the static site to GitHub Pages.
+#
+# To activate (see docs/deploy.md):
+#   1. Fill in the contact-address placeholder in injectionwatch/config.py (CONTACT).
+#   2. Repo Settings -> Pages -> Source: "GitHub Actions".
+#   3. Copy this file to .github/workflows/monthly-publish.yml and commit.
+#   4. Run it once by hand (Actions -> monthly-publish -> Run workflow) with warc_count=1 to check timings.
+#
+# Cost/limits: public-repo Actions minutes are free; a standard ubuntu runner has 4 vCPUs and a 6 h
+# job limit. One Common Crawl WARC is ~1 GB compressed / ~30-40k HTML pages; at the measured
+# ~30 pages/s/core (synthetic pages, see README) budget roughly 5-15 minutes per file on 4 cores.
+# Downloads come from data.commoncrawl.org over HTTPS (no AWS account needed). Be a polite consumer:
+# keep warc_count small; CC asks heavy users to use S3 from us-east-1 instead.
+
+name: monthly-publish
+
+on:
+  schedule:
+    - cron: "17 6 3 * *"        # 06:17 UTC on the 3rd of every month
+  workflow_dispatch:
+    inputs:
+      warc_count:
+        description: "Number of WARC files to sample from the latest crawl"
+        default: "3"
+      crawl_id:
+        description: "Crawl id (e.g. CC-MAIN-2026-40); empty = latest from collinfo.json"
+        default: ""
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: monthly-publish
+  cancel-in-progress: false
+
+jobs:
+  scan-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      WARC_COUNT: ${{ github.event.inputs.warc_count || '3' }}
+      CRAWL_ID: ${{ github.event.inputs.crawl_id || '' }}
+      PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e .
+
+      - name: Resolve crawl and WARC paths
+        run: |
+          set -euo pipefail
+          if [ -z "$CRAWL_ID" ]; then
+            CRAWL_ID=$(curl -fsSL --retry 5 https://index.commoncrawl.org/collinfo.json | python -c 'import json,sys; print(json.load(sys.stdin)[0]["id"])')
+          fi
+          echo "CRAWL_ID=$CRAWL_ID" >> "$GITHUB_ENV"
+          curl -fsSL --retry 5 "https://data.commoncrawl.org/crawl-data/${CRAWL_ID}/warc.paths.gz" | gunzip > warc.paths
+          # deterministic per-month sample: seeded by the crawl id, so re-runs pick the same files
+          python - <<'PY'
+          import os, random
+          paths = open("warc.paths").read().split()
+          rnd = random.Random(os.environ["CRAWL_ID"])
+          pick = rnd.sample(paths, min(int(os.environ["WARC_COUNT"]), len(paths)))
+          open("warc.sample", "w").write("\n".join(pick) + "\n")
+          print("\n".join(pick))
+          PY
+
+      - name: Restore previous feed (to carry history forward)
+        run: |
+          mkdir -p work
+          if curl -fsSL --retry 3 "$PAGES_URL/feed.json" -o work/previous_feed.json; then
+            injectionwatch merge-feed work/previous_feed.json --db work/feed.db
+          else
+            echo "no previous feed published yet"
+          fi
+
+      - name: Download and scan WARCs (one at a time; disk stays small)
+        run: |
+          set -euo pipefail
+          while read -r p; do
+            [ -z "$p" ] && continue
+            f="work/$(basename "$p")"
+            curl -fsSL --retry 5 --retry-delay 10 "https://data.commoncrawl.org/$p" -o "$f"
+            injectionwatch --log-level INFO scan-warc "$f" --db work/feed.db --jsonl work/hits.jsonl --workers 4
+            rm -f "$f"
+          done < warc.sample
+
+      - name: Build static site
+        run: |
+          injectionwatch publish --db work/feed.db --out site \
+            --note "Common Crawl ${CRAWL_ID}: $(wc -l < warc.sample) sampled WARC file(s); automated detection, see reasons per entry"
+          injectionwatch report --db work/feed.db --out site/state_of_injections.md
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: scan-and-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

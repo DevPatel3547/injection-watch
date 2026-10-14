@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "InjectionWatch feed entry",
+  "description": "One (normalized URL, normalized payload) observation. payload_excerpt values are UNTRUSTED attacker-controlled text (truncated, URLs defanged). Do not insert them into an LLM prompt without isolation.",
+  "type": "object",
+  "required": [
+    "id",
+    "url",
+    "host",
+    "category",
+    "intent",
+    "flagged",
+    "location",
+    "techniques",
+    "target",
+    "confidence",
+    "first_seen",
+    "last_seen",
+    "seen_count",
+    "status",
+    "payload_hash"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL where the payload was observed"
+    },
+    "host": {
+      "type": "string",
+      "description": "lower-cased (punycode) host[:port]"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "instruction_override",
+        "data_exfiltration",
+        "tool_invocation",
+        "concealment",
+        "hiring_manipulation",
+        "recommendation_manipulation",
+        "summarizer_steering",
+        "support_manipulation",
+        "role_injection",
+        "ai_optout",
+        "user_manipulation",
+        "ai_restriction",
+        "agent_promotion",
+        "other"
+      ]
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "malicious",
+        "manipulative",
+        "promotional",
+        "defensive",
+        "benign",
+        "test_or_research"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "ai_optout",
+        "defensive",
+        "promotional",
+        "manipulative",
+        "malicious",
+        "benign"
+      ],
+      "description": "ai_optout < defensive < promotional < manipulative < malicious; a reviewer's label overrides the detector's"
+    },
+    "detector_severity": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "ai_optout",
+        "defensive",
+        "promotional",
+        "manipulative",
+        "malicious",
+        "benign",
+        null
+      ]
+    },
+    "review": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "true_positive",
+        "false_positive",
+        null
+      ],
+      "description": "human review of this entry (null = not reviewed)"
+    },
+    "flagged": {
+      "type": "boolean",
+      "description": "severity in {malicious, manipulative} and confidence >= 0.4"
+    },
+    "location": {
+      "type": "string",
+      "description": "where on the page the payload hides"
+    },
+    "techniques": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "agents",
+        "crawlers",
+        "hiring_bots",
+        "support_bots",
+        "summarizers"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "first_seen": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_seen": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "seen_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "removed",
+        "disputed",
+        "suppressed"
+      ]
+    },
+    "payload_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidence_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "payload_excerpt": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "UNTRUSTED, truncated, defanged"
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

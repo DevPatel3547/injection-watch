@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use the InjectionWatch software or feed, please cite it as below."
+title: "InjectionWatch: an open feed of indirect prompt injections on the web"
+type: software
+authors:
+  - family-names: Patel
+    given-names: Dev
+version: 0.3.0
+date-released: 2026-10-12
+license: Apache-2.0
+repository-code: "https://github.com/DevPatel3547/injectionwatch"
+keywords:
+  - prompt injection
+  - LLM security
+  - AI agents
+  - threat intelligence

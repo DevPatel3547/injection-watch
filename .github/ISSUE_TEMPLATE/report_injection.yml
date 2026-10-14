@@ -1,0 +1,27 @@
+name: Report an injection / detector miss
+description: A page that hides instructions for AI agents, or a payload the detector misses.
+title: "[report] <short description>"
+labels: ["report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For detector misses, a **minimal synthetic HTML snippet** is best (use example.com / *.example domains).
+        Please do not paste live malicious links as clickable URLs; defang them (hxxps://evil[.]example).
+  - type: input
+    id: url
+    attributes:
+      label: Public URL (defanged), if any
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Minimal HTML that reproduces it
+      render: html
+  - type: input
+    id: language
+    attributes:
+      label: Language of the payload
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (where it hides, what it asks the agent to do)

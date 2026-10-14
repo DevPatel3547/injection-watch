@@ -1,0 +1,59 @@
+# --- Python: virtualenvs, bytecode, tool caches -------------------------------
+.venv/
+venv/
+env/
+.env
+.env.*
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# --- Node ---------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+
+# --- Build outputs ------------------------------------------------------------
+*.egg-info/
+build/
+dist/
+extension/dist/
+extension/*.zip
+_site/
+
+# --- Databases (feed DBs, demo DBs, rate-limit DBs) -----------------------------
+# Small, hand-reviewed sample DBs may be committed if named *.reviewed-sample.db.
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+!*.reviewed-sample.db
+
+# --- Large raw data (WARCs, scan working dirs, saved third-party pages) ----------
+# Keep anything > 5 MB out of the repo. Raw HTML of real hit pages stays with the maintainer.
+*.warc
+*.warc.gz
+*.arc.gz
+warc.paths.gz
+hit_pages/
+*.html.gz
+work/
+out/
+data-volume/
+reports/synthetic.warc.gz
+reports/synthetic_hits.jsonl
+reports/crawl_summary.json
+reports/eval/latest.json
+reports/eval/ci.json
+
+# --- Editors / OS ---------------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp

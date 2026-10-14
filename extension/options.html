@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>InjectionWatch options</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="page">
+<h1>InjectionWatch options</h1>
+
+<section>
+  <h2>Local scanning</h2>
+  <p>Every page you open is scanned <strong>on your device</strong> for hidden text aimed at AI agents. The badge shows the
+  number of findings. Nothing about your browsing leaves the browser because of scanning.</p>
+</section>
+
+<section>
+  <h2>Reporting (off by default)</h2>
+  <label class="toggle"><input type="checkbox" id="consent"> I want to be able to report findings to the InjectionWatch feed</label>
+  <p class="small">When this is on, each finding in the popup gets a <em>Report</em> button. Nothing is sent until you click it and
+  confirm a dialog showing the exact data. A report contains only: the page URL <strong>without</strong> query string or fragment,
+  a SHA-256 hash of the hidden text, its category and technique, and the extension version. Never page text, excerpts, cookies,
+  or identifiers. Reports from incognito windows are refused. Reports are leads: nothing is published until the project's crawler
+  independently re-observes the payload on the public page.</p>
+  <label for="endpoint">Feed API endpoint (https only)</label>
+  <input type="url" id="endpoint" placeholder="https://feed.example.org" size="40">
+  <p class="small">Saving an endpoint asks Chrome for permission to contact that one origin, and nothing else.</p>
+  <button id="save" type="button">Save</button> <span id="status" role="status"></span>
+</section>
+
+<p><a href="privacy.html">Privacy policy</a></p>
+<script src="options.js"></script>
+</body></html>

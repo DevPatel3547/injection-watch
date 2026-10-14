@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>InjectionWatch privacy policy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="page">
+<h1>InjectionWatch browser extension: privacy policy</h1>
+<p class="small">Version 0.2.0. Applies to the extension only; the project's feed and API are covered by docs/ethics.md.</p>
+
+<h2>What the extension does</h2>
+<p>It reads the page you are viewing, extracts text that is hidden from humans but readable by AI agents (hidden elements,
+comments, meta tags, attributes, structured data, invisible Unicode), and scores it with a fixed rule set bundled inside
+the extension. Results are shown as a badge and in the popup.</p>
+
+<h2>Data collected</h2>
+<ul>
+  <li><strong>By default: none.</strong> All scanning happens locally. Findings for open tabs are kept in memory only and discarded
+    when the tab closes.</li>
+  <li><strong>Settings</strong> (reporting on/off, endpoint) are stored with <code>chrome.storage.local</code> on your device.</li>
+  <li><strong>Optional reports.</strong> Only if you (1) turn reporting on in Options, (2) click <em>Report</em> on a finding, and
+    (3) confirm a dialog showing the exact data, the extension sends one HTTPS request to the endpoint you configured containing:
+    the page URL as scheme + host + path (query string and fragment removed; URLs with embedded credentials are never sent),
+    a SHA-256 hash of the normalized hidden text, its category, its technique, and the extension version.</li>
+</ul>
+
+<h2>Never collected or sent</h2>
+<ul>
+  <li>Page content, the hidden text itself, excerpts, form data, or screenshots.</li>
+  <li>Cookies, credentials, browsing history, other tabs, or any identifier for you or your browser
+    (requests use <code>credentials: "omit"</code> and <code>referrerPolicy: "no-referrer"</code>).</li>
+  <li>Anything from incognito windows.</li>
+</ul>
+
+<h2>Remote code</h2>
+<p>None. All scripts and detection rules are packaged in the extension; it never downloads or evaluates code.</p>
+
+<h2>Permissions</h2>
+<ul>
+  <li><code>storage</code>: remember your settings.</li>
+  <li>Content script on http/https pages: needed to scan the page you are viewing, locally.</li>
+  <li>Optional host permission for the single report endpoint you configure, requested only when you save it.</li>
+</ul>
+
+<h2>Caveat</h2>
+<p>A URL path alone can be sensitive (for example <code>/users/jane-doe/settings</code>). The confirmation dialog lets you decline.
+Do not report pages that are only reachable while logged in.</p>
+
+<h2>Contact</h2>
+<p>Questions or deletion requests for a report you sent: open an issue in the project repository or use the contact address
+listed there. Submitted reports contain no identifier, so we can only locate one if you give us the URL and the time you sent it.</p>
+</body></html>

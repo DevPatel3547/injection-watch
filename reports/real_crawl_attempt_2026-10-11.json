@@ -1,0 +1,10 @@
+{
+  "attempted": 8,
+  "fetched_html": 0,
+  "robots_disallowed": 0,
+  "blocked": 0,
+  "errors": 8,
+  "pages_flagged": 0,
+  "findings": 0,
+  "aborted": "circuit breaker: 8 consecutive network-level failures (egress likely blocked); stopping without retries"
+}

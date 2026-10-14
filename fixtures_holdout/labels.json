@@ -1,0 +1,77 @@
+{
+  "h1_paraphrase_no_keywords.html": {
+    "technique": "display:none",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "category": null,
+    "headers": {},
+    "note": "paraphrase avoids every keyword rule",
+    "lang": "en"
+  },
+  "h2_non_english.html": {
+    "technique": "comment",
+    "expect_flag": true,
+    "expect_location": "comment",
+    "category": null,
+    "headers": {},
+    "note": "Spanish; rules are English-only",
+    "lang": "es"
+  },
+  "h3_js_inserted.html": {
+    "technique": "js_dom",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "category": null,
+    "headers": {},
+    "note": "only visible after JS runs: static misses, rendered pass should catch",
+    "lang": "en"
+  },
+  "h4_benign_ai_policy.html": {
+    "technique": "visible",
+    "expect_flag": false,
+    "expect_location": "visible",
+    "category": null,
+    "headers": {},
+    "note": "",
+    "lang": "en"
+  },
+  "h5_benign_security_quiz.html": {
+    "technique": "display:none",
+    "expect_flag": false,
+    "expect_location": "hidden_css",
+    "category": null,
+    "headers": {},
+    "note": "hidden quiz answer that quotes an injection",
+    "lang": "en"
+  },
+  "h6_external_css.html": {
+    "technique": "external_css",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "category": null,
+    "headers": {},
+    "note": "hidden by an external stylesheet the static pass cannot see (assets/hide.css added in v0.2: the stylesheet was referenced but never written in v0.1)",
+    "assets": {
+      "/hide.css": "hide.css"
+    },
+    "lang": "en"
+  },
+  "h7_benign_credits_comment.html": {
+    "technique": "comment",
+    "expect_flag": false,
+    "expect_location": "comment",
+    "category": null,
+    "headers": {},
+    "note": "",
+    "lang": "en"
+  },
+  "h8_split_spans.html": {
+    "technique": "display:none",
+    "expect_flag": true,
+    "expect_location": "hidden_css",
+    "category": null,
+    "headers": {},
+    "note": "",
+    "lang": "en"
+  }
+}

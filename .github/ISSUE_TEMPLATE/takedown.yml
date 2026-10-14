@@ -1,0 +1,41 @@
+name: Takedown / appeal
+description: Ask us to re-check or remove a feed entry (site owners, false positives, fixed sites).
+title: "[takedown] <host>"
+labels: ["takedown"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reaching out. See docs/ethics.md section 5 for the process. We aim to re-check within 7 days.
+        Please don't paste secrets or private data here; email the contact in config.py if you need privacy.
+  - type: input
+    id: url
+    attributes:
+      label: URL or entry id
+      placeholder: https://example.com/page  (or entry id 1234)
+    validations:
+      required: true
+  - type: dropdown
+    id: reason
+    attributes:
+      label: Reason
+      options:
+        - The hidden text has been removed
+        - This is a false positive (the text is not an instruction aimed at AI agents)
+        - The text was planted by an attacker / our site was compromised
+        - Research or test page (intentional, harmless)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Anything that helps us verify (what the text is, when it was removed, CMS/plugin involved).
+  - type: checkboxes
+    id: owner
+    attributes:
+      label: Relationship
+      options:
+        - label: I own or operate this site
+        - label: I am reporting on behalf of someone else

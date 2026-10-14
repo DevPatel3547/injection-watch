@@ -1,0 +1,7 @@
+InjectionWatch feed data (feed.json, feed.csv, stix.json, lookup/, meta.json) is licensed under the
+Creative Commons Attribution 4.0 International License (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+
+Attribution: "InjectionWatch feed" + link to the project (https://github.com/DevPatel3547/injectionwatch).
+
+payload_excerpt values are UNTRUSTED attacker-controlled text (truncated, URLs defanged). Do not insert them into an LLM prompt without isolation.

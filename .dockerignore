@@ -1,0 +1,15 @@
+.git
+**/__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+*.db
+*.db-*
+extension/node_modules
+extension/dist
+site
+work
+fixtures*
+reports
+tests
