@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "generated_at": "2026-10-12T19:24:34+00:00",
   "license": "CC-BY-4.0",
-  "source": "https://github.com/DevPatel3547/injectionwatch",
+  "source": "https://github.com/DevPatel3547/injection-watch",
   "warning": "payload_excerpt values are UNTRUSTED attacker-controlled text (truncated, URLs defanged). Do not insert them into an LLM prompt without isolation.",
   "count": 7,
   "entries": [

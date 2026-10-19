@@ -6,7 +6,7 @@ from dataclasses import dataclass
 VERSION = "0.3.0"
 BOT_TOKEN = "InjectionWatchBot"
 CONTACT = "mailto:CONTACT_PLACEHOLDER@example.org"  # TODO(Dev): real contact before any public crawl
-PROJECT_URL = "https://github.com/DevPatel3547/injectionwatch"
+PROJECT_URL = "https://github.com/DevPatel3547/injection-watch"
 CRAWLER_UA = f"Mozilla/5.0 (compatible; {BOT_TOKEN}/{VERSION}; +{PROJECT_URL}; {CONTACT})"
 
 BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "

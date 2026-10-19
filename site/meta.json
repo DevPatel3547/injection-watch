@@ -4,7 +4,7 @@
   "rules_version": "0.3.0",
   "generated_at": "2026-10-12T19:24:34+00:00",
   "license": "CC-BY-4.0",
-  "source": "https://github.com/DevPatel3547/injectionwatch",
+  "source": "https://github.com/DevPatel3547/injection-watch",
   "warning": "payload_excerpt values are UNTRUSTED attacker-controlled text (truncated, URLs defanged). Do not insert them into an LLM prompt without isolation.",
   "data_note": "Common Crawl CC-MAIN-2026-39 sample: 20 random WARCs, 426,318 HTML pages, scanned 2026-10-12 with InjectionWatch v0.3 (static HTML only). Only hand-reviewed true positives are listed (one reviewer). ai_optout counts are unreviewed detector signals. Absence from this feed never means a site is safe.",
   "count": 7,

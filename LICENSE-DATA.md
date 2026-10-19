@@ -11,7 +11,7 @@ appropriate credit, link to the licence, and indicate if changes were made.
 
 Suggested attribution:
 
-> Contains data from the InjectionWatch feed (https://github.com/DevPatel3547/injectionwatch), CC BY 4.0.
+> Contains data from the InjectionWatch feed (https://github.com/DevPatel3547/injection-watch), CC BY 4.0.
 
 Notes
 

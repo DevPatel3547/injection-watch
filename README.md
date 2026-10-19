@@ -4,7 +4,7 @@
 that tries to instruct AI agents, found by scanning Common Crawl, labelled by a human and published with
 evidence.**
 
-[![CI](https://github.com/DevPatel3547/injectionwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/DevPatel3547/injectionwatch/actions/workflows/ci.yml)
+[![CI](https://github.com/DevPatel3547/injection-watch/actions/workflows/ci.yml/badge.svg)](https://github.com/DevPatel3547/injection-watch/actions/workflows/ci.yml)
 Version 0.3.0 (pre-release) · Python 3.11+ · Code: Apache-2.0 · Feed data: CC BY 4.0
 
 Think PhishTank or URLhaus, but for AI agents. Before an agent reads a page, it (or the tool wrapping
@@ -213,7 +213,7 @@ to do, not the site owner's intent.
 ## Quickstart
 
 ```bash
-git clone https://github.com/DevPatel3547/injectionwatch.git
+git clone https://github.com/DevPatel3547/injection-watch.git
 cd injectionwatch
 python3 -m venv .venv && . .venv/bin/activate
 make install          # pip install -e '.[api,llm,mcp,render,dev]'
@@ -523,7 +523,7 @@ See [CITATION.cff](CITATION.cff):
 
 ```
 Patel, D. (2026). InjectionWatch: an open feed of indirect prompt injections on the web (v0.3.0) [Software].
-https://github.com/DevPatel3547/injectionwatch
+https://github.com/DevPatel3547/injection-watch
 ```
 
 Please also cite the measurement studies in [Why it matters](#why-it-matters) when you use those numbers.

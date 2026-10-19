@@ -35,7 +35,7 @@ There are two independent ways to deploy. Most users only need the first.
 To activate it:
 
 1. Fill in the `CONTACT` placeholder in `injectionwatch/config.py` (`PROJECT_URL` already points to
-   https://github.com/DevPatel3547/injectionwatch).
+   https://github.com/DevPatel3547/injection-watch).
 2. Under Settings -> Pages, set Source to **GitHub Actions**.
 3. `cp deploy/github-actions/monthly-publish.yml .github/workflows/`, then commit and push.
 4. Trigger it once with `warc_count=1` and check the run time and the site before relying on the
