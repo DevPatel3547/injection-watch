@@ -1,0 +1,35 @@
+{
+ "schema": "iwbench/1",
+ "runs": [
+  {
+   "file": "v0.3_baseline_static.json",
+   "version": "0.3.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.3.0",
+    "ml": false,
+    "mode": "static"
+   },
+   "generated_at": "2026-11-05T05:17:34Z",
+   "recall": 0.119,
+   "fp_rate": 0.0,
+   "quick": false
+  },
+  {
+   "file": "v0.3_baseline_static_css.json",
+   "version": "0.3.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.3.0",
+    "ml": false,
+    "mode": "static_css"
+   },
+   "generated_at": "2026-11-05T05:32:55Z",
+   "recall": 0.1241,
+   "fp_rate": 0.0,
+   "quick": false
+  }
+ ]
+}
