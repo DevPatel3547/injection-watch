@@ -62,14 +62,13 @@ def test_public_addresses(ip):
 
 @pytest.mark.parametrize("url", ["http://127.0.0.1/", "http://[::1]/", "http://169.254.169.254/latest/meta-data/",
                                  "http://10.1.2.3:8080/", "http://[::ffff:127.0.0.1]/", "http://2130706433/",
-                                 "http://0x7f000001/"])
+                                 "http://0x7f000001/", "http://127.1/", "http://0177.0.0.1/", "http://0/"])
 def test_literal_and_numeric_hosts_blocked(url):
-    def sys_like(host, port):  # what getaddrinfo does with numeric hosts
-        import socket
-        return [i[4][0] for i in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)]
+    def no_dns(host, port):
+        raise AssertionError(f"numeric host {host!r} must not reach DNS")
 
     with pytest.raises(FetchBlocked):
-        vet_url(url, FetchPolicy(), sys_like)
+        vet_url(url, FetchPolicy(), no_dns)
 
 
 def test_dns_name_resolving_to_loopback_is_blocked():
@@ -328,7 +327,7 @@ def test_https_to_vetted_ip_verifies_certificate_for_the_real_name(tmp_path, mon
         fp = fetch_page(f"https://pub.example:{port}/", pol, resolver=res)
         assert fp.status == 200 and "vetted address" in fp.text and fp.ip == "127.0.0.1"
         assert seen["host"] == f"pub.example:{port}"
-        with pytest.raises(FetchError, match="TLS|failed"):     # certificate is for pub.example, not other.example
+        with pytest.raises(FetchError, match=r"TLS|failed"):     # certificate is for pub.example, not other.example
             fetch_page(f"https://other.example:{port}/", pol, resolver=res)
     finally:
         httpd.shutdown()

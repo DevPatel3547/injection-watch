@@ -78,6 +78,11 @@ class PoliteFetcher:
                 time.sleep(delay)
         self._last[host] = time.monotonic()
 
+    def _done(self, host: str) -> None:
+        """Measure the delay from the END of the previous request, so a slow response (or a slow network)
+        never lets two requests reach the host closer together than ``min_delay``."""
+        self._last[host] = time.monotonic()
+
     # -- robots
     def _robots_for(self, scheme: str, host: str):
         key = f"{scheme}://{host}"
@@ -99,6 +104,8 @@ class PoliteFetcher:
                 rp.parse(r.text.splitlines())
         except requests.RequestException:
             rp = None  # network failure: caller treats as unfetchable
+        finally:
+            self._done(host)
         self._robots[key] = rp
         return rp
 
@@ -143,6 +150,8 @@ class PoliteFetcher:
                 return FetchResult(url, r.url, r.status_code, headers, text, err)
             except requests.RequestException as e:
                 return FetchResult(url, url, None, {}, "", f"network:{type(e).__name__}")
+            finally:
+                self._done(host)
 
 
 def read_domain_list(path: str, limit: int | None = None) -> list[str]:

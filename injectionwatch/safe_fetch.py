@@ -129,6 +129,24 @@ def system_resolver(host: str, port: int) -> list[str]:
     return out
 
 
+_LEGACY_NUM_RE = re.compile(r"^(?:0x[0-9a-f]+|[0-9]+)(?:\.(?:0x[0-9a-f]+|[0-9]+)){0,3}$", re.I)
+
+
+def _literal_ip(host: str) -> str | None:
+    """The IP a host string denotes without DNS, including legacy inet_aton forms that many resolvers accept
+    (``2130706433``, ``0x7f000001``, ``127.1``, ``0177.0.0.1``), so the check never depends on the platform."""
+    try:
+        return str(ipaddress.ip_address(host.strip("[]")))
+    except ValueError:
+        pass
+    if _LEGACY_NUM_RE.match(host):
+        try:
+            return socket.inet_ntoa(socket.inet_aton(host))
+        except OSError:
+            return "0.0.0.0"   # unparseable numeric host: treat as unspecified (blocked)
+    return None
+
+
 def vet_url(url: str, policy: FetchPolicy, resolver: Resolver = system_resolver) -> tuple[str, str, int, str]:
     """Validate ``url`` against ``policy``; returns (scheme, host, port, vetted_ip). Raises FetchBlocked."""
     try:
@@ -147,10 +165,7 @@ def vet_url(url: str, policy: FetchPolicy, resolver: Resolver = system_resolver)
     port = port or (443 if scheme == "https" else 80)
     if policy.allowed_ports is not None and port not in policy.allowed_ports:
         raise FetchBlocked(f"port {port} is not allowed by the fetch policy", "use a standard port")
-    try:
-        literal: str | None = str(ipaddress.ip_address(host))
-    except ValueError:
-        literal = None
+    literal = _literal_ip(host)
     addrs = [literal] if literal else resolver(host, port)
     if not addrs:
         raise FetchError(f"host {host!r} resolved to no addresses", "check the URL")
@@ -158,7 +173,8 @@ def vet_url(url: str, policy: FetchPolicy, resolver: Resolver = system_resolver)
         for a in addrs:
             why = blocked_reason(a)
             if why:
-                raise FetchBlocked(f"refusing to fetch {host}: it resolves to {a} ({why})",
+                where = f"{host} ({why})" if literal else f"{host}: it resolves to {a} ({why})"
+                raise FetchBlocked(f"refusing to fetch {where}",
                                    "agents must not reach internal addresses; pass allow_private=True only for "
                                    "trusted local testing")
     return scheme, host, port, addrs[0]

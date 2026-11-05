@@ -7,6 +7,12 @@ from injectionwatch.cli import main
 
 from .conftest import ROOT
 
+
+def _base_env():
+    import os
+
+    return {k: v for k, v in os.environ.items() if k in ("PATH", "SYSTEMROOT", "TEMP", "TMP", "LANG")}
+
 SECRET = "sk-ant-not-a-real-key-0123456789abcdef"
 
 
@@ -94,6 +100,6 @@ def test_network_check_against_fake_anthropic(monkeypatch):
 def test_doctor_as_subprocess():
     p = subprocess.run([sys.executable, "-m", "injectionwatch", "doctor", "--json", "--no-chromium"],
                        capture_output=True, text=True, timeout=120, cwd=ROOT,
-                       env={"PATH": "/usr/bin:/bin", "PYTHONPATH": str(ROOT), "HOME": str(ROOT / "build")})
+                       env={**_base_env(), "PYTHONPATH": str(ROOT), "HOME": str(ROOT / "build")})
     assert p.returncode == 0, p.stderr
     assert json.loads(p.stdout)["version"]

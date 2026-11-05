@@ -112,7 +112,9 @@ def test_dashboard_renders_and_client_side_check(tmp_path):
     errors: list[str] = []
     try:
         with sync_playwright() as p:
-            b = p.chromium.launch()
+            from .conftest import chromium_launch_kwargs
+
+            b = p.chromium.launch(**chromium_launch_kwargs())
             pg = b.new_page()
             pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
