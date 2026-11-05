@@ -52,17 +52,27 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _inputs_summary(inputs: list[str]) -> dict[str, Any]:
+    """Scan inputs (e.g. Common Crawl WARC names) are never published: with a WARC name and an offset anyone
+    can find a held record again. Publish only how many there were and a digest the maintainer can check."""
+    names = sorted(Path(p).name for p in inputs)
+    return {"count": len(names), "sha256_of_sorted_names": hashlib.sha256("\n".join(names).encode()).hexdigest()}
+
+
 def build_site(db: DB, out: str | Path, data_note: str = "", clean: bool = True,
-               severities: list[str] | None = None, reviewed_only: bool = False) -> dict[str, Any]:
+               severities: list[str] | None = None, reviewed_only: bool = False,
+               holds: export.Holds | None = None) -> dict[str, Any]:
     """``severities``: effective severities to publish as feed entries (default: all except ai_optout, which is
     an opt-out *signal* and only appears as aggregate counts). ``reviewed_only``: only entries a human
-    labelled true_positive."""
+    labelled true_positive. ``holds``: sites under the private-disclosure hold (default: read the file named by
+    ``$INJECTIONWATCH_HOLD_FILE``); their entries are published only in redacted form (export.apply_holds)."""
     out = Path(out)
     if clean and out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True, exist_ok=True)
     sev = severities if severities is not None else [s for s in (*SEVERITIES, "benign") if s != "ai_optout"]
-    entries = db.feed(limit=10_000_000, severities=sev, reviewed_only=reviewed_only)
+    holds = holds if holds is not None else export.load_holds()
+    entries = export.apply_holds(db.feed(limit=10_000_000, severities=sev, reviewed_only=reviewed_only), holds)
     stats = db.stats()
     cfg, _ = load_rules()
     runs = db.scan_runs(limit=5)
@@ -83,11 +93,12 @@ def build_site(db: DB, out: str | Path, data_note: str = "", clean: bool = True,
         "published_by_category": dict(Counter(e["category"] for e in entries)),
         "published_by_location": dict(Counter(e["location"] for e in entries)),
         "published_hosts": len({e["host"] for e in entries}),
+        "held_entries": sum(1 for e in entries if e.get("held")),
         "signals": stats.get("signals", {}),
         "stats": stats, "shards": len(shards), "shard_keys": sorted(shards),
         "shard_scheme": "sha256(lowercase host)[:2] -> lookup/<xx>.json",
         "recent_scans": [{"started_at": r["started_at"], "finished_at": r["finished_at"],
-                          "inputs": [Path(p).name for p in r["inputs"]],
+                          "inputs": _inputs_summary(r["inputs"]),
                           "stats": {k: r["stats"].get(k) for k in ("html_pages", "pages_scanned", "bytes_payload",
                                                                    "errors", "findings", "pages_flagged")}}
                          for r in runs],

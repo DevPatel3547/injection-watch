@@ -1,0 +1,7 @@
+# Keep byte-exact LF checkouts everywhere: frozen fixtures are checked by SHA-256 (tests/test_detector_eval.py).
+* text=auto eol=lf
+# CSV is written by the csv module with CRLF row endings; keep it byte-for-byte.
+*.csv -text
+*.png binary
+*.gz binary
+*.zip binary

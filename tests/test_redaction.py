@@ -45,7 +45,7 @@ DATA_FILES = [p for p in FILES if p.relative_to(ROOT).parts[0] in DATA_DIRS and 
 
 
 def _rel(p: Path) -> str:
-    return str(p.relative_to(ROOT))
+    return p.relative_to(ROOT).as_posix()
 
 
 def _records(p: Path) -> Iterator[Any]:
