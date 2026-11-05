@@ -16,12 +16,19 @@ sends gated near-misses so paraphrases the rules miss can still be caught.
 from __future__ import annotations
 
 import json
+import logging
 import os
+import random
 import re
+import threading
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from .scorer import ScoreResult
+
+log = logging.getLogger("injectionwatch.classify")
 
 CATEGORIES = [
     "instruction_override", "data_exfiltration", "tool_invocation", "concealment",
@@ -149,43 +156,279 @@ _TOOL = {
 }
 
 
-class AnthropicClassifier:
-    """Adapter for the Anthropic Messages API. `client` is injectable for tests."""
+# --------------------------------------------------------------------------- shared retry machinery
+
+RETRYABLE_STATUS = {408, 409, 429, 500, 502, 503, 504, 529}
+
+
+class LLMCallError(Exception):
+    """One failed attempt. ``reason`` is a short, log-safe label; ``retry_after`` comes from the server."""
+
+    def __init__(self, reason: str, *, retryable: bool, retry_after: float | None = None, fatal: bool = False):
+        super().__init__(reason)
+        self.reason = reason
+        self.retryable = retryable
+        self.retry_after = retry_after
+        self.fatal = fatal          # auth / permission / unknown model: stop calling for the rest of the run
+
+
+def parse_retry_after(headers: Any) -> float | None:
+    """``retry-after-ms`` (ms), else ``retry-after`` (seconds, float allowed, or an HTTP date)."""
+    if headers is None:
+        return None
+    get = headers.get
+    try:
+        ms = get("retry-after-ms")
+        if ms is not None:
+            return max(0.0, float(ms) / 1000.0)
+    except (TypeError, ValueError):
+        pass
+    ra = get("retry-after")
+    if ra is None:
+        return None
+    try:
+        return max(0.0, float(ra))
+    except (TypeError, ValueError):
+        pass
+    try:
+        from email.utils import parsedate_to_datetime
+
+        when = parsedate_to_datetime(str(ra))
+        return max(0.0, when.timestamp() - time.time())
+    except (TypeError, ValueError, IndexError, OverflowError):
+        return None
+
+
+@dataclass
+class LLMStats:
+    requests: int = 0
+    retries: int = 0
+    successes: int = 0
+    fallbacks: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    last_error: str | None = None
+    fallback_reasons: dict[str, int] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+class _LiveClassifier:
+    """Retry loop with a total deadline, retry-after handling, and a circuit breaker.
+
+    * retryable failures (429, 5xx, 529 overloaded, timeouts, connection errors) are retried up to
+      ``max_retries`` times, waiting ``retry-after`` when the server sends it (else exponential backoff
+      with jitter), but never past ``timeout`` seconds in total for one classification;
+    * a ``retry-after`` longer than ``max_retry_after`` or the remaining budget gives up at once;
+    * fatal failures (401/403, unknown model) open the breaker: every later call falls back without
+      touching the network, so one bad key cannot cost one request per page;
+    * ``breaker_after`` consecutive failed classifications also open it.
+    Every fallback records its reason in the Classification (rationale, ``source``, ``extra``)."""
+
+    name = "live"
+
+    def __init__(self, *, fallback: Classifier | None, max_retries: int, timeout: float, request_timeout: float,
+                 max_retry_after: float, breaker_after: int, sleep: Callable[[float], None] | None = None):
+        self.fallback = fallback or HeuristicClassifier()
+        self.max_retries = max(0, max_retries)
+        self.timeout = timeout
+        self.request_timeout = request_timeout
+        self.max_retry_after = max_retry_after
+        self.breaker_after = breaker_after
+        self.sleep = sleep or time.sleep
+        self.stats = LLMStats()
+        self.disabled_reason: str | None = None
+        self._consecutive_failures = 0
+        self._lock = threading.Lock()
+
+    def _attempt(self, text: str, location: str, score: ScoreResult, timeout: float) -> Classification:
+        raise NotImplementedError
+
+    def classify(self, text: str, location: str, score: ScoreResult) -> Classification:
+        if self.disabled_reason:
+            return self._fallback(text, location, score, f"disabled after earlier error: {self.disabled_reason}")
+        deadline = time.monotonic() + self.timeout
+        attempt = 0
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0.05:
+                return self._fail(text, location, score, "timeout: total budget exhausted")
+            with self._lock:
+                self.stats.requests += 1
+            try:
+                out = self._attempt(text, location, score, min(self.request_timeout, remaining))
+            except LLMCallError as e:
+                if e.fatal:
+                    self.disabled_reason = e.reason
+                    return self._fail(text, location, score, e.reason)
+                if not e.retryable or attempt >= self.max_retries:
+                    suffix = f" after {attempt} retr{'y' if attempt == 1 else 'ies'}" if attempt else ""
+                    return self._fail(text, location, score, e.reason + suffix)
+                wait = e.retry_after if e.retry_after is not None else min(8.0, 0.5 * 2 ** attempt)
+                if e.retry_after is None:
+                    wait *= 0.5 + random.random() / 2
+                remaining = deadline - time.monotonic()
+                if wait > self.max_retry_after or wait >= remaining:
+                    return self._fail(text, location, score,
+                                      f"{e.reason}; retry-after {wait:g}s exceeds the remaining budget")
+                log.info("llm retry", extra={"classifier": self.name, "reason": e.reason, "wait_s": round(wait, 3),
+                                             "attempt": attempt + 1})
+                with self._lock:
+                    self.stats.retries += 1
+                self.sleep(wait)
+                attempt += 1
+                continue
+            with self._lock:
+                self.stats.successes += 1
+                self._consecutive_failures = 0
+            return out
+
+    def _fail(self, text: str, location: str, score: ScoreResult, reason: str) -> Classification:
+        with self._lock:
+            self._consecutive_failures += 1
+            if self.breaker_after and self._consecutive_failures >= self.breaker_after and not self.disabled_reason:
+                self.disabled_reason = f"{self._consecutive_failures} consecutive failures (last: {reason})"
+        log.warning("llm fallback to heuristic", extra={"classifier": self.name, "reason": reason})
+        return self._fallback(text, location, score, reason)
+
+    def _fallback(self, text: str, location: str, score: ScoreResult, reason: str) -> Classification:
+        with self._lock:
+            self.stats.fallbacks += 1
+            self.stats.last_error = reason
+            key = reason.split(":", 1)[0].split(";", 1)[0]
+            self.stats.fallback_reasons[key] = self.stats.fallback_reasons.get(key, 0) + 1
+        return _fallback(self.fallback, text, location, score, reason)
+
+
+# --------------------------------------------------------------------------- Anthropic
+
+# Models that reject forced tool use (tool_choice any/tool) with HTTP 400 whatever the thinking settings
+# (Anthropic tool-use docs, checked 2026-11). For these we send tool_choice=auto plus an instruction.
+NO_FORCED_TOOL_RE = re.compile(r"claude-(?:opus|sonnet|fable|mythos)-5", re.I)
+
+
+def tool_choice_for(model: str) -> dict[str, Any]:
+    if NO_FORCED_TOOL_RE.search(model):
+        return {"type": "auto"}
+    return {"type": "tool", "name": _TOOL["name"]}
+
+
+class AnthropicClassifier(_LiveClassifier):
+    """Adapter for the Anthropic Messages API through the official SDK.
+
+    The SDK reads ``ANTHROPIC_API_KEY`` and ``ANTHROPIC_BASE_URL`` from the environment (the tests point
+    the base URL at a local fake server). SDK-level retries are switched off so the retry policy above is
+    the only one. ``stream=True`` uses SSE streaming (``messages.stream``) and parses the tool call from
+    ``input_json_delta`` events. ``client`` is injectable."""
 
     name = "anthropic"
 
     def __init__(self, model: str = DEFAULT_MODEL, client: Any = None, max_chars: int = 2000,
-                 fallback: Classifier | None = None):
+                 fallback: Classifier | None = None, *, max_retries: int = 3, timeout: float = 60.0,
+                 request_timeout: float = 30.0, max_retry_after: float = 30.0, breaker_after: int = 5,
+                 stream: bool = False, base_url: str | None = None, api_key: str | None = None,
+                 sleep: Callable[[float], None] | None = None):
+        super().__init__(fallback=fallback, max_retries=max_retries, timeout=timeout,
+                         request_timeout=request_timeout, max_retry_after=max_retry_after,
+                         breaker_after=breaker_after, sleep=sleep)
         self.model = model
         self.max_chars = max_chars
-        self.fallback = fallback or HeuristicClassifier()
+        self.stream = stream
         if client is None:
-            import anthropic  # optional dependency
+            try:
+                import anthropic  # optional dependency
+            except ImportError as e:
+                from .errors import MissingDependency
 
-            client = anthropic.Anthropic()
+                raise MissingDependency("anthropic", "llm", "--classifier anthropic") from e
+            kw: dict[str, Any] = {"max_retries": 0, "timeout": request_timeout}
+            if base_url:
+                kw["base_url"] = base_url
+            if api_key:
+                kw["api_key"] = api_key
+            client = anthropic.Anthropic(**kw)
         self.client = client
 
     def build_messages(self, text: str, location: str, score: ScoreResult) -> list[dict[str, Any]]:
         return [{"role": "user", "content": _user_body(text, location, score, self.max_chars)}]
 
-    def classify(self, text: str, location: str, score: ScoreResult) -> Classification:
+    def request_kwargs(self, text: str, location: str, score: ScoreResult) -> dict[str, Any]:
+        choice = tool_choice_for(self.model)
+        system = _SYSTEM if choice["type"] == "tool" else _SYSTEM + " Call record_classification exactly once."
+        return {"model": self.model, "max_tokens": 300 if choice["type"] == "tool" else 1024, "system": system,
+                "tools": [_TOOL], "tool_choice": choice, "messages": self.build_messages(text, location, score)}
+
+    def _attempt(self, text: str, location: str, score: ScoreResult, timeout: float) -> Classification:
+        # No sampling parameters: current SDKs/models reject `temperature` (SDK 2.x has no such argument).
+        kw = self.request_kwargs(text, location, score)
         try:
-            resp = self.client.messages.create(
-                model=self.model, max_tokens=300, system=_SYSTEM, temperature=0,
-                tools=[_TOOL], tool_choice={"type": "tool", "name": "record_classification"},
-                messages=self.build_messages(text, location, score),
-            )
-            data = None
-            for block in getattr(resp, "content", []) or []:
-                btype = getattr(block, "type", None) or (block.get("type") if isinstance(block, dict) else None)
-                if btype == "tool_use":
-                    data = getattr(block, "input", None) if not isinstance(block, dict) else block.get("input")
-                    break
-            if not isinstance(data, dict):
-                raise ValueError("no tool_use block in response")
-            return _validated(data, f"anthropic:{self.model}")
-        except Exception as e:  # network, auth, parse - degrade gracefully
-            return _fallback(self.fallback, text, location, score, e)
+            if self.stream:
+                with self.client.messages.stream(**kw, timeout=timeout) as s:
+                    resp = s.get_final_message()
+            else:
+                resp = self.client.messages.create(**kw, timeout=timeout)
+        except Exception as e:
+            raise _anthropic_error(e) from None
+        usage = getattr(resp, "usage", None)
+        if usage is not None:
+            with self._lock:
+                self.stats.input_tokens += int(getattr(usage, "input_tokens", 0) or 0)
+                self.stats.output_tokens += int(getattr(usage, "output_tokens", 0) or 0)
+        data = None
+        for block in getattr(resp, "content", []) or []:
+            btype = getattr(block, "type", None) or (block.get("type") if isinstance(block, dict) else None)
+            if btype == "tool_use":
+                data = getattr(block, "input", None) if not isinstance(block, dict) else block.get("input")
+                break
+            if btype == "text" and data is None:
+                txt = getattr(block, "text", None) if not isinstance(block, dict) else block.get("text")
+                try:
+                    data = _first_json_object(str(txt or ""))
+                except ValueError:
+                    pass
+        if not isinstance(data, dict):
+            raise LLMCallError("bad_response: no tool_use block", retryable=False)
+        return _validated(data, f"anthropic:{self.model}")
+
+
+def _anthropic_error(e: Exception) -> LLMCallError:
+    """Map SDK exceptions (any version) onto retry decisions without importing anthropic at module load."""
+    if isinstance(e, LLMCallError):
+        return e
+    cls = type(e).__name__
+    status = getattr(e, "status_code", None)
+    if status is None and cls == "APIStatusError":  # pragma: no cover - defensive
+        status = getattr(getattr(e, "response", None), "status_code", None)
+    if status is not None:
+        body = getattr(e, "body", None)
+        etype = ""
+        if isinstance(body, dict):
+            err = body.get("error") if isinstance(body.get("error"), dict) else body
+            etype = str(err.get("type", "")) if isinstance(err, dict) else ""
+        reason = f"http_{status}" + (f" {etype}" if etype else "")
+        headers = getattr(getattr(e, "response", None), "headers", None)
+        if status in (401, 403):
+            return LLMCallError(reason + ": check ANTHROPIC_API_KEY (run `injectionwatch doctor`)", retryable=False,
+                                fatal=True)
+        if status == 404:
+            return LLMCallError(reason + ": unknown model or endpoint (check INJECTIONWATCH_MODEL / base URL)",
+                                retryable=False, fatal=True)
+        # status 200 + error type = an `event: error` received mid-stream (the HTTP status was already sent)
+        mid_stream_retryable = status == 200 and etype in ("overloaded_error", "api_error", "rate_limit_error",
+                                                            "timeout_error")
+        if status == 200:
+            reason = f"stream_error {etype or 'unknown'}"
+        return LLMCallError(reason, retryable=status in RETRYABLE_STATUS or mid_stream_retryable,
+                            retry_after=parse_retry_after(headers))
+    if "Timeout" in cls or isinstance(e, TimeoutError):
+        return LLMCallError("timeout", retryable=True)
+    if "Connection" in cls or isinstance(e, ConnectionError | OSError):
+        return LLMCallError(f"connection_error: {cls}", retryable=True)
+    if cls == "APIError" or "Overloaded" in str(e) or "overloaded_error" in str(e):
+        # mid-stream SSE error event (status 200 already sent): treat overloaded/api errors as retryable
+        return LLMCallError(f"stream_error: {str(e)[:80]}", retryable=True)
+    return LLMCallError(f"error: {cls}", retryable=False)
 
 
 def _user_body(text: str, location: str, score: ScoreResult, max_chars: int) -> str:
@@ -211,10 +454,12 @@ def _validated(data: dict[str, Any], source: str) -> Classification:
     return Classification(str(cat), str(intent), str(target), conf, rationale, source)
 
 
-def _fallback(fb: Classifier, text: str, location: str, score: ScoreResult, e: Exception) -> Classification:
+def _fallback(fb: Classifier, text: str, location: str, score: ScoreResult, e: Exception | str) -> Classification:
+    reason = e if isinstance(e, str) else type(e).__name__
     c = fb.classify(text, location, score)
-    c.rationale += f" (llm unavailable: {type(e).__name__})"
+    c.rationale += f" (llm unavailable: {reason})"
     c.source += "+llm_error"
+    c.extra["llm_error"] = reason
     return c
 
 
@@ -241,25 +486,29 @@ def _first_json_object(s: str) -> dict[str, Any]:
     return obj
 
 
-class OpenAICompatClassifier:
+class OpenAICompatClassifier(_LiveClassifier):
     """Classifier for any OpenAI-compatible chat-completions endpoint (Ollama, llama.cpp server,
-    vLLM, LM Studio...). No API key needed for a local server. ``session`` is injectable for tests."""
+    vLLM, LM Studio...). No API key needed for a local server. ``session`` is injectable for tests.
+    Same retry / deadline / breaker policy as the Anthropic adapter."""
 
     name = "openai-compat"
 
     def __init__(self, base_url: str | None = None, model: str | None = None, api_key: str | None = None,
                  session: Any = None, timeout: float = 60.0, max_chars: int = 2000,
-                 fallback: Classifier | None = None):
+                 fallback: Classifier | None = None, *, max_retries: int = 2, request_timeout: float | None = None,
+                 max_retry_after: float = 30.0, breaker_after: int = 5,
+                 sleep: Callable[[float], None] | None = None):
         import requests
 
+        super().__init__(fallback=fallback, max_retries=max_retries, timeout=timeout,
+                         request_timeout=request_timeout or timeout, max_retry_after=max_retry_after,
+                         breaker_after=breaker_after, sleep=sleep)
         base = base_url or os.environ.get("INJECTIONWATCH_LLM_BASE_URL") or DEFAULT_LOCAL_BASE_URL
         self.base_url = base.rstrip("/")
         self.model = model or os.environ.get("INJECTIONWATCH_LLM_MODEL") or DEFAULT_LOCAL_MODEL
         self.api_key = api_key if api_key is not None else os.environ.get("INJECTIONWATCH_LLM_API_KEY", "")
         self.session = session or requests.Session()
-        self.timeout = timeout
         self.max_chars = max_chars
-        self.fallback = fallback or HeuristicClassifier()
 
     def build_payload(self, text: str, location: str, score: ScoreResult) -> dict[str, Any]:
         return {
@@ -273,34 +522,50 @@ class OpenAICompatClassifier:
             ],
         }
 
-    def classify(self, text: str, location: str, score: ScoreResult) -> Classification:
+    def _attempt(self, text: str, location: str, score: ScoreResult, timeout: float) -> Classification:
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
         try:
             r = self.session.post(f"{self.base_url}/chat/completions", json=self.build_payload(text, location, score),
-                                  headers=headers, timeout=self.timeout)
-            r.raise_for_status()
-            content = r.json()["choices"][0]["message"]["content"]
+                                  headers=headers, timeout=timeout)
+        except Exception as e:
+            cls = type(e).__name__
+            if "Timeout" in cls or isinstance(e, TimeoutError):
+                raise LLMCallError("timeout", retryable=True) from None
+            raise LLMCallError(f"connection_error: {cls}", retryable=True) from None
+        status = int(getattr(r, "status_code", 200))
+        if status >= 400:
+            if status in (401, 403):
+                raise LLMCallError(f"http_{status}: check INJECTIONWATCH_LLM_API_KEY", retryable=False, fatal=True)
+            raise LLMCallError(f"http_{status}", retryable=status in RETRYABLE_STATUS,
+                               retry_after=parse_retry_after(getattr(r, "headers", None)))
+        try:
+            body = r.json()
+            usage = body.get("usage") or {}
+            with self._lock:
+                self.stats.input_tokens += int(usage.get("prompt_tokens", 0) or 0)
+                self.stats.output_tokens += int(usage.get("completion_tokens", 0) or 0)
+            content = body["choices"][0]["message"]["content"]
             return _validated(_first_json_object(content), f"openai-compat:{self.model}")
-        except Exception as e:  # network, HTTP, parse - degrade gracefully
-            return _fallback(self.fallback, text, location, score, e)
+        except (ValueError, KeyError, IndexError, TypeError) as e:
+            raise LLMCallError(f"bad_response: {type(e).__name__}", retryable=False) from None
 
 
 def make_classifier(kind: str | None = None, **kw: Any) -> Classifier:
     """kind: heuristic | local (alias openai-compat / ollama) | anthropic. Defaults to
-    $INJECTIONWATCH_CLASSIFIER, else heuristic. Never raises for a missing optional dependency:
-    falls back to the heuristic classifier."""
+    $INJECTIONWATCH_CLASSIFIER, else heuristic. Never raises for a missing optional dependency or key:
+    falls back to the heuristic classifier and logs why (the CLI checks first and errors with a hint)."""
     kind = (kind or os.environ.get("INJECTIONWATCH_CLASSIFIER") or "heuristic").lower()
     if kind in ("local", "openai-compat", "openai", "ollama"):
         return OpenAICompatClassifier(**kw)
     if kind == "anthropic":
         try:
             return AnthropicClassifier(**kw)
-        except Exception:
+        except Exception as e:
+            log.warning("anthropic classifier unavailable, using heuristic", extra={"reason": type(e).__name__})
             return HeuristicClassifier()
     return HeuristicClassifier()
-
 
 def default_classifier() -> Classifier:
     return make_classifier()
