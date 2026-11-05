@@ -194,4 +194,6 @@ def test_extension_dist_is_store_ready():
     assert out.returncode == 0, out.stderr
     manifest = json.loads((ROOT / "extension/dist/manifest.json").read_text())
     assert manifest["options_ui"]["page"] == "options.html" and manifest["permissions"] == ["storage"]
-    assert manifest["version"] == "0.3.0"
+    from injectionwatch.config import VERSION
+
+    assert manifest["version"] == VERSION == json.loads((ROOT / "extension/package.json").read_text())["version"]
