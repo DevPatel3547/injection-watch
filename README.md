@@ -60,7 +60,6 @@ the page the text sits, which rules fired, and when it was captured.
 [How this was built](#how-this-was-built)
 
 Further reading: [docs/BUILD_LOG.md](docs/BUILD_LOG.md) (what was done, in order, and why),
-[docs/INTERVIEW_GUIDE.md](docs/INTERVIEW_GUIDE.md) (design questions with short answers),
 [docs/ethics.md](docs/ethics.md), [docs/deploy.md](docs/deploy.md), [SECURITY.md](SECURITY.md).
 
 ---

@@ -40,7 +40,7 @@ HTML also shaped the detector: look at comments, metadata, attributes and hidden
 * A SQLite store with de-duplication on (normalised URL, payload hash) and an observation history,
   JSON/CSV/STIX 2.1 export, a first API with unversioned `/check`, `/feed` and `/stats` routes (they now
   308-redirect to `/v1/...`), a UA-based cloaking checker and a first browser extension with a hash-only
-  reporting model (the concepts listed in `docs/maintainer-notes.md` items 1–10).
+  reporting model.
 * **Dev v1 corpus** (`fixtures/`, 34 synthetic pages): the v0.1 rules were written against it.
 * **Held-out v1** (`fixtures_holdout/`, 8 pages): paraphrase with no keywords, Spanish, JS-inserted text,
   external CSS, split spans, and three benign look-alikes.
