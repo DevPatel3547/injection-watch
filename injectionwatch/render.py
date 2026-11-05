@@ -79,7 +79,7 @@ class Renderer:
         except Exception as e:
             self._pw.stop()
             msg = str(e)
-            if "Executable doesn't exist" in msg or "executable" in msg.lower() and "not found" in msg.lower():
+            if "Executable doesn't exist" in msg or ("executable" in msg.lower() and "not found" in msg.lower()):
                 raise ChromiumNotFound("Playwright is installed but no Chromium was found", chromium_hint()) from None
             raise ChromiumNotFound(f"could not start Chromium: {msg.splitlines()[0][:160]}", chromium_hint()) from None
         self.timeout_ms = timeout_ms

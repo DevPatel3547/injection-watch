@@ -60,12 +60,7 @@ class FakeOpenAI:
                         self._send(int(step["status"]), {"error": {"message": "scripted error",
                                                                    "type": step.get("type", "server_error")}}, h)
                         return
-                    if step.get("content") is not None:
-                        content = step["content"]
-                    else:
-                        content = None
-                else:
-                    content = None
+                content = step.get("content") if isinstance(step, dict) else None
                 if content is None:
                     user = body["messages"][-1]["content"]
                     m = _SNIPPET_RE.search(user)

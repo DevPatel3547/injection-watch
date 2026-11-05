@@ -1,0 +1,108 @@
+name: InjectionWatch scan-site
+description: >-
+  Scan your built static site for hidden prompt injections (text aimed at AI agents and hidden from
+  people), e.g. planted by a compromised plugin, theme or dependency. Writes SARIF for GitHub code scanning.
+author: Dev Patel
+branding:
+  icon: shield
+  color: red
+
+inputs:
+  path:
+    description: Directory your site builds into (e.g. _site, dist, public, out), or one HTML file.
+    required: true
+  fail-on:
+    description: "Fail the job on: flagged (default), any (any finding, including low-confidence notes), never."
+    required: false
+    default: flagged
+  sarif-file:
+    description: Where to write the SARIF 2.1.0 report.
+    required: false
+    default: injectionwatch.sarif
+  upload-sarif:
+    description: >-
+      Upload the SARIF report to GitHub code scanning (needs `permissions: security-events: write`;
+      code scanning must be available for the repository).
+    required: false
+    default: "false"
+  python-version:
+    description: Python used to run the scanner.
+    required: false
+    default: "3.12"
+  extra-args:
+    description: Extra arguments for `injectionwatch scan-site` (e.g. "--exclude 'vendor/*' --no-css").
+    required: false
+    default: ""
+
+outputs:
+  flagged:
+    description: Number of flagged findings.
+    value: ${{ steps.scan.outputs.flagged }}
+  findings:
+    description: Number of findings in total (flagged and notes).
+    value: ${{ steps.scan.outputs.findings }}
+  files-scanned:
+    description: Number of HTML files scanned.
+    value: ${{ steps.scan.outputs.files_scanned }}
+  sarif-file:
+    description: Path of the SARIF report.
+    value: ${{ inputs.sarif-file }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install InjectionWatch (from this action's ref)
+      shell: bash
+      run: |
+        python -m venv "$RUNNER_TEMP/injectionwatch-venv"
+        if [ -x "$RUNNER_TEMP/injectionwatch-venv/bin/python" ]; then IWPY="$RUNNER_TEMP/injectionwatch-venv/bin/python";
+        else IWPY="$RUNNER_TEMP/injectionwatch-venv/Scripts/python.exe"; fi
+        "$IWPY" -m pip install --quiet --disable-pip-version-check "$GITHUB_ACTION_PATH"
+        echo "IWPY=$IWPY" >> "$GITHUB_ENV"
+
+    - name: Scan
+      id: scan
+      shell: bash
+      env:
+        IW_PATH: ${{ inputs.path }}
+        IW_SARIF: ${{ inputs.sarif-file }}
+        IW_EXTRA: ${{ inputs.extra-args }}
+      run: |
+        set -euo pipefail
+        summary_json="$RUNNER_TEMP/injectionwatch-summary.json"
+        # shellcheck disable=SC2086  # extra-args is intentionally word-split
+        "$IWPY" -m injectionwatch scan-site "$IW_PATH" --sarif "$IW_SARIF" --fail-on never \
+          --summary-md "$GITHUB_STEP_SUMMARY" --json-out "$summary_json" $IW_EXTRA
+        "$IWPY" - "$summary_json" >> "$GITHUB_OUTPUT" <<'PY'
+        import json, sys
+        s = json.load(open(sys.argv[1], encoding="utf-8"))["summary"]
+        print(f"flagged={s['flagged']}")
+        print(f"findings={s['findings']}")
+        print(f"files_scanned={s['files_scanned']}")
+        PY
+
+    - name: Upload SARIF to code scanning
+      if: ${{ inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.sarif-file }}
+        category: injectionwatch
+
+    - name: Enforce fail-on
+      shell: bash
+      env:
+        IW_FAIL_ON: ${{ inputs.fail-on }}
+        IW_FLAGGED: ${{ steps.scan.outputs.flagged }}
+        IW_FINDINGS: ${{ steps.scan.outputs.findings }}
+      run: |
+        case "$IW_FAIL_ON" in
+          flagged) if [ "$IW_FLAGGED" -gt 0 ]; then echo "::error::InjectionWatch: $IW_FLAGGED flagged hidden prompt injection(s); see the job summary and the SARIF report"; exit 1; fi ;;
+          any) if [ "$IW_FINDINGS" -gt 0 ]; then echo "::error::InjectionWatch: $IW_FINDINGS finding(s)"; exit 1; fi ;;
+          never) ;;
+          *) echo "::error::fail-on must be flagged, any or never (got '$IW_FAIL_ON')"; exit 2 ;;
+        esac
+        echo "InjectionWatch: no blocking findings ($IW_FLAGGED flagged, $IW_FINDINGS total)"

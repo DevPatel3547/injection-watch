@@ -67,14 +67,16 @@ class InjectionWatchTransformer(BaseDocumentTransformer):
 
 class GuardedLoader(BaseLoader):
     """Load URLs through ``guard.fetch`` (SSRF-safe, size-capped, sanitised). Failed or blocked URLs
-    are skipped with the reason in ``self.errors`` unless ``raise_errors=True``."""
+    are skipped with the reason in ``self.errors`` unless ``raise_errors=True``; HTTP error pages (4xx/5xx)
+    are skipped unless ``keep_errors=True``."""
 
     def __init__(self, urls: Sequence[str], policy: FetchPolicy | None = None, drop_flagged: bool = False,
-                 raise_errors: bool = False, **fetch_kwargs: Any):
+                 raise_errors: bool = False, keep_errors: bool = False, **fetch_kwargs: Any):
         self.urls = list(urls)
         self.policy = policy
         self.drop_flagged = drop_flagged
         self.raise_errors = raise_errors
+        self.keep_errors = keep_errors      # keep 4xx/5xx error pages as documents
         self.fetch_kwargs = fetch_kwargs
         self.errors: dict[str, str] = {}
 
@@ -86,6 +88,9 @@ class GuardedLoader(BaseLoader):
                 if self.raise_errors:
                     raise
                 self.errors[url] = e.one_line()
+                continue
+            if page.status is not None and page.status >= 400 and not self.keep_errors:
+                self.errors[url] = f"skipped: HTTP {page.status}"
                 continue
             if page.verdict == "blocked" or (self.drop_flagged and page.flagged):
                 self.errors[url] = f"skipped: {page.verdict}"

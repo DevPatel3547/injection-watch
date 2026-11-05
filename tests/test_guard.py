@@ -73,7 +73,7 @@ def test_literal_and_numeric_hosts_blocked(url):
 
 
 def test_dns_name_resolving_to_loopback_is_blocked():
-    with pytest.raises(FetchBlocked, match="resolves to 127.0.0.1"):
+    with pytest.raises(FetchBlocked, match=r"resolves to 127\.0\.0\.1"):
         vet_url("https://innocent.example/", FetchPolicy(), resolver_for({"innocent.example": "127.0.0.1"}))
     # one bad address among good ones is enough (round-robin rebinding)
     with pytest.raises(FetchBlocked):
@@ -115,7 +115,7 @@ def test_redirect_from_public_to_private_is_refused(site):
     site.routes["/r"] = lambda req: (302, {"Location": "http://metadata.internal/latest/"}, "")
     tr = LocalRoute(site.port)
     res = resolver_for({"pub.example": PUBLIC_IP, "metadata.internal": "169.254.169.254"})
-    with pytest.raises(FetchBlocked, match="169.254.169.254"):
+    with pytest.raises(FetchBlocked, match=r"169\.254\.169\.254"):
         fetch_page("http://pub.example/r", FetchPolicy(), resolver=res, transport=tr)
     assert len(tr.opened) == 1                       # the private hop was never connected
     # a redirect to a literal loopback URL is refused the same way
@@ -188,7 +188,7 @@ def test_timeout_on_slow_server(site):
         return 200, {"Content-Type": "text/html"}, "<p>late</p>"
 
     site.routes["/slow"] = slow
-    with pytest.raises(FetchError, match="timed out|failed"):
+    with pytest.raises(FetchError, match=r"timed out|failed"):
         fetch_page("http://pub.example/slow", FetchPolicy(timeout=0.5),
                    resolver=resolver_for({"pub.example": PUBLIC_IP}), transport=LocalRoute(site.port))
 
@@ -278,3 +278,57 @@ def test_feed_flagged_url_is_not_fetched(tmp_path, monkeypatch):
 
     page = guard.fetch("https://bad.example/", transport=Boom(), resolver=resolver_for({"bad.example": PUBLIC_IP}))
     assert page.verdict == "blocked" and page.feed_verdict == "flagged" and page.text == ""
+
+
+# --------------------------------------------------------------------------- TLS when connecting to the vetted IP
+
+def _tls_server(tmp_path, cn):
+    import shutil
+    import ssl
+    import subprocess
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    if not shutil.which("openssl"):
+        pytest.skip("openssl CLI not available")
+    key, crt = tmp_path / "k.pem", tmp_path / "c.pem"
+    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(key), "-out", str(crt),
+                    "-days", "1", "-subj", f"/CN={cn}", "-addext", f"subjectAltName=DNS:{cn}"],
+                   check=True, capture_output=True, timeout=60)
+    seen = {}
+
+    class H(BaseHTTPRequestHandler):
+        def do_GET(self):
+            seen["host"] = self.headers.get("Host")
+            body = b"<p>Served over TLS to the vetted address.</p>"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *a):
+            pass
+
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.load_cert_chain(crt, key)
+    httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return httpd, crt, seen
+
+
+def test_https_to_vetted_ip_verifies_certificate_for_the_real_name(tmp_path, monkeypatch):
+    httpd, crt, seen = _tls_server(tmp_path, "pub.example")
+    try:
+        monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(crt))
+        port = httpd.server_address[1]
+        pol = FetchPolicy(allow_private=True, trust_env_proxy=False)
+        res = resolver_for({"pub.example": "127.0.0.1", "other.example": "127.0.0.1"})
+        fp = fetch_page(f"https://pub.example:{port}/", pol, resolver=res)
+        assert fp.status == 200 and "vetted address" in fp.text and fp.ip == "127.0.0.1"
+        assert seen["host"] == f"pub.example:{port}"
+        with pytest.raises(FetchError, match="TLS|failed"):     # certificate is for pub.example, not other.example
+            fetch_page(f"https://other.example:{port}/", pol, resolver=res)
+    finally:
+        httpd.shutdown()
