@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 BOT_TOKEN = "InjectionWatchBot"
 CONTACT = "mailto:CONTACT_PLACEHOLDER@example.org"  # TODO(Dev): real contact before any public crawl
 PROJECT_URL = "https://github.com/DevPatel3547/injection-watch"
 CRAWLER_UA = f"Mozilla/5.0 (compatible; {BOT_TOKEN}/{VERSION}; +{PROJECT_URL}; {CONTACT})"
+# On-demand fetches made for a user or agent (guard.fetch, MCP fetch_url_safely). Not a crawler and not a browser.
+GUARD_UA = f"InjectionWatch-Guard/{VERSION} (+{PROJECT_URL})"
 
 BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
               "Chrome/141.0.0.0 Safari/537.36")
