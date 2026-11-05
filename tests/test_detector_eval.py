@@ -62,3 +62,18 @@ def test_holdout_v2_is_frozen():
         assert hashlib.sha256((root / rel).read_bytes()).hexdigest() == digest, rel
     labels = __import__("json").loads((root / "labels.json").read_text())
     assert len(labels) == 46 and sum(v["expect_flag"] for v in labels.values()) == 24
+
+
+def test_holdout_v3_is_frozen():
+    """fixtures_holdout_v3 was written and frozen before any v0.4 detector change (public test-split payloads +
+    benign pages written for it); any edit invalidates the reported numbers."""
+    import hashlib
+
+    root = DEFAULT_FIXTURES.parent / "fixtures_holdout_v3"
+    listed = dict(reversed(line.split("  ", 1)) for line in (root / "MANIFEST.sha256").read_text().splitlines())
+    files = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file() and p.name != "MANIFEST.sha256"}
+    assert set(listed) == files
+    for rel, digest in listed.items():
+        assert hashlib.sha256((root / rel).read_bytes()).hexdigest() == digest, rel
+    labels = __import__("json").loads((root / "labels.json").read_text())
+    assert len(labels) == 46 and sum(v["expect_flag"] for v in labels.values()) == 26

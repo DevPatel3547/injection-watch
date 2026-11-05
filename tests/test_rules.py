@@ -12,7 +12,8 @@ from injectionwatch.textutil import payload_hash
 
 from .conftest import ROOT
 
-CORPORA = ["fixtures", "fixtures_dev", "fixtures_holdout", "fixtures_holdout_v2", "fixtures_realweb"]
+CORPORA = ["fixtures", "fixtures_dev", "fixtures_holdout", "fixtures_holdout_v2", "fixtures_holdout_v3",
+           "fixtures_realweb"]
 LANGS = {"en", "es", "fr", "de", "pt", "zh", "ja", "ru", "hi", "ar"}
 
 
