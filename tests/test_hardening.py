@@ -89,3 +89,18 @@ def test_dashboard_renders_hostile_feed_text_as_text(tmp_path: Path) -> None:
     finally:
         httpd.shutdown()
     json.loads((out / "meta.json").read_text("utf-8"))
+
+
+def test_css_selector_budget_is_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The complex-selector budget is counted in work, not wall-clock time, so results never depend on load."""
+    from bs4 import BeautifulSoup
+
+    from injectionwatch import css
+
+    monkeypatch.setattr(css, "MAX_SELECT_WORK", 20_000)
+    soup = BeautifulSoup("<html><body>" + "<div><p>x</p></div>" * 200 + "</body></html>", "lxml")
+    sheet = " ".join(f"div > p:nth-child({i}) {{display:none}}" for i in range(1, 101))
+    runs = [css.build_index(soup, [sheet]).complex_skipped for _ in range(2)]
+    n_el = sum(1 for _ in soup.find_all(True))
+    expected = 100 - min(css.MAX_COMPLEX_SELECTORS, 20_000 // n_el)
+    assert runs == [expected, expected] and expected > 0

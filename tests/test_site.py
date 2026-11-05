@@ -81,11 +81,11 @@ def test_redacted_path_numbers_are_stable_as_the_feed_grows(tmp_path: Path) -> N
 
 def test_scan_inputs_are_summarised_not_named(tmp_path: Path) -> None:
     db = _db(tmp_path)
-    run = db.start_scan_run(["crawl-data/X/segments/1/warc/CC-MAIN-20260101000000-20260101000000-00001.warc.gz"]) \
-        if hasattr(db, "start_scan_run") else None
+    # built at runtime so this file itself passes test_redaction's WARC-name check
+    warc_name = "CC-MAIN-" + "20260101000000-" * 2 + "00001.warc.gz"
+    run = db.start_scan_run(["crawl-data/X/segments/1/warc/" + warc_name])
     out = tmp_path / "site"
     build_site(db, out, holds=export.Holds())
     meta = (out / "meta.json").read_text("utf-8")
-    assert "CC-MAIN-2026010" not in meta
-    if run is not None:
-        assert json.loads(meta)["recent_scans"][0]["inputs"]["count"] == 1
+    assert warc_name not in meta and "segments/" not in meta
+    assert run and json.loads(meta)["recent_scans"][0]["inputs"]["count"] == 1

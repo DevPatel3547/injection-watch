@@ -16,7 +16,6 @@ no pseudo-elements, no state pseudo-classes (``:hover``), no layout. The rendere
 from __future__ import annotations
 
 import re
-import time
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -37,7 +36,9 @@ RELEVANT_PROPS = HIDING_PROPS | COLOR_PROPS
 # Hard limits that keep the static pass bounded on hostile or giant pages.
 MAX_CSS_BYTES = 1_500_000
 MAX_COMPLEX_SELECTORS = 400
-SELECT_BUDGET_S = 0.75
+# Deterministic work budget for complex selectors: (selectors evaluated) x (elements on the page). A wall-clock
+# budget made findings depend on machine load; this one gives the same answer for the same page everywhere.
+MAX_SELECT_WORK = 2_000_000
 
 _COMMENT_RE = re.compile(r"/\*.*?\*/", re.S)
 _SIMPLE_SEL_RE = re.compile(r"^([a-z][a-z0-9-]*|\*)?((?:[.#][\w-]+)*)$", re.I)
@@ -262,9 +263,10 @@ def build_index(soup: BeautifulSoup, sheets: list[str]) -> StyleIndex:
         else:
             idx.universal.append(r)
     if complex_rules:
-        deadline = time.monotonic() + SELECT_BUDGET_S
+        n_elements = max(1, sum(1 for _ in soup.find_all(True)))
+        max_selectors = min(MAX_COMPLEX_SELECTORS, MAX_SELECT_WORK // n_elements)
         for n, r in enumerate(complex_rules):
-            if n >= MAX_COMPLEX_SELECTORS or time.monotonic() > deadline:
+            if n >= max_selectors:
                 idx.complex_skipped = len(complex_rules) - n
                 break
             try:
