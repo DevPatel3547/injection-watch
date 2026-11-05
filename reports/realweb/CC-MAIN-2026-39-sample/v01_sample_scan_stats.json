@@ -1,29 +1,15 @@
 {
   "crawl": "CC-MAIN-2026-39",
-  "warcs_selected": [
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700164.15/warc/CC-MAIN-20260912161414-20260912191414-00467.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699912.32/warc/CC-MAIN-20260910062340-20260910092340-00431.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700164.15/warc/CC-MAIN-20260912161414-20260912191414-00979.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699911.48/warc/CC-MAIN-20260910032001-20260910062001-00303.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699834.1/warc/CC-MAIN-20260909025510-20260909055510-00560.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699585.9/warc/CC-MAIN-20260905103615-20260905133615-00189.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699549.24/warc/CC-MAIN-20260905043015-20260905073015-00243.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699925.45/warc/CC-MAIN-20260910092715-20260910122715-00943.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700124.88/warc/CC-MAIN-20260912100909-20260912130909-00906.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699525.42/warc/CC-MAIN-20260905012745-20260905042745-00873.warc.gz"
-  ],
-  "warcs_scanned": [
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700164.15/warc/CC-MAIN-20260912161414-20260912191414-00467.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699912.32/warc/CC-MAIN-20260910062340-20260910092340-00431.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700164.15/warc/CC-MAIN-20260912161414-20260912191414-00979.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699911.48/warc/CC-MAIN-20260910032001-20260910062001-00303.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699834.1/warc/CC-MAIN-20260909025510-20260909055510-00560.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699585.9/warc/CC-MAIN-20260905103615-20260905133615-00189.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699549.24/warc/CC-MAIN-20260905043015-20260905073015-00243.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699925.45/warc/CC-MAIN-20260910092715-20260910122715-00943.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700124.88/warc/CC-MAIN-20260912100909-20260912130909-00906.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699525.42/warc/CC-MAIN-20260905012745-20260905042745-00873.warc.gz"
-  ],
+  "warcs_selected": {
+    "count": 10,
+    "sha256_of_sorted_list": "041795bdd14d3b74d6b6e1766a4584955f3acf8feb52a32479521eecf16e1c1b",
+    "note": "WARC file names withheld from the public repo (redaction); the maintainer keeps the list."
+  },
+  "warcs_scanned": {
+    "count": 10,
+    "sha256_of_sorted_list": "041795bdd14d3b74d6b6e1766a4584955f3acf8feb52a32479521eecf16e1c1b",
+    "note": "WARC file names withheld from the public repo (redaction); the maintainer keeps the list."
+  },
   "elapsed_s": 1183.2,
   "workers": 9,
   "page_timeout_s": 20,
@@ -91,7 +77,7 @@
     "img@alt": 1,
     "div@data-description": 1,
     "meta[ai]": 1,
-    "meta[\u201drobots\u201d]": 1,
+    "meta[”robots”]": 1,
     "meta[x-robots-tag]": 1,
     "header:x-ai": 1
   },
@@ -126,7 +112,7 @@
   "hit_pages_saved": 241,
   "per_warc": [
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700164.15/warc/CC-MAIN-20260912161414-20260912191414-00467.warc.gz",
+      "warc_index": 1,
       "scan_s": 104.9,
       "records": 65401,
       "responses": 21800,
@@ -147,7 +133,7 @@
       "pages_per_s": 203.83
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699912.32/warc/CC-MAIN-20260910062340-20260910092340-00431.warc.gz",
+      "warc_index": 2,
       "scan_s": 104.0,
       "records": 64945,
       "responses": 21648,
@@ -168,7 +154,7 @@
       "pages_per_s": 203.41
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700164.15/warc/CC-MAIN-20260912161414-20260912191414-00979.warc.gz",
+      "warc_index": 3,
       "scan_s": 116.0,
       "records": 64483,
       "responses": 21494,
@@ -189,7 +175,7 @@
       "pages_per_s": 181.63
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699911.48/warc/CC-MAIN-20260910032001-20260910062001-00303.warc.gz",
+      "warc_index": 4,
       "scan_s": 125.6,
       "records": 65053,
       "responses": 21684,
@@ -210,7 +196,7 @@
       "pages_per_s": 169.09
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699834.1/warc/CC-MAIN-20260909025510-20260909055510-00560.warc.gz",
+      "warc_index": 5,
       "scan_s": 120.9,
       "records": 65662,
       "responses": 21887,
@@ -231,7 +217,7 @@
       "pages_per_s": 177.46
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699585.9/warc/CC-MAIN-20260905103615-20260905133615-00189.warc.gz",
+      "warc_index": 6,
       "scan_s": 125.6,
       "records": 66052,
       "responses": 22017,
@@ -252,7 +238,7 @@
       "pages_per_s": 171.82
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699549.24/warc/CC-MAIN-20260905043015-20260905073015-00243.warc.gz",
+      "warc_index": 7,
       "scan_s": 117.1,
       "records": 66613,
       "responses": 22204,
@@ -273,7 +259,7 @@
       "pages_per_s": 185.76
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699925.45/warc/CC-MAIN-20260910092715-20260910122715-00943.warc.gz",
+      "warc_index": 8,
       "scan_s": 112.8,
       "records": 65302,
       "responses": 21767,
@@ -294,7 +280,7 @@
       "pages_per_s": 189.03
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700124.88/warc/CC-MAIN-20260912100909-20260912130909-00906.warc.gz",
+      "warc_index": 9,
       "scan_s": 115.5,
       "records": 64753,
       "responses": 21584,
@@ -315,7 +301,7 @@
       "pages_per_s": 183.07
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699525.42/warc/CC-MAIN-20260905012745-20260905042745-00873.warc.gz",
+      "warc_index": 10,
       "scan_s": 114.2,
       "records": 66079,
       "responses": 22026,

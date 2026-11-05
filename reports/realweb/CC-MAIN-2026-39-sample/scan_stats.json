@@ -3,50 +3,16 @@
   "injectionwatch_version": "0.3.0",
   "rules_version": "0.3.0",
   "seed": 20261012,
-  "warcs_selected": [
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699973.67/warc/CC-MAIN-20260911064402-20260911094402-00304.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699484.2/warc/CC-MAIN-20260904161806-20260904191806-00035.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699577.65/warc/CC-MAIN-20260905073245-20260905103245-00613.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699475.64/warc/CC-MAIN-20260904131603-20260904161603-00186.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699549.24/warc/CC-MAIN-20260905043015-20260905073015-00656.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700389.62/warc/CC-MAIN-20260913194028-20260913224028-00657.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788493000724.71/warc/CC-MAIN-20260917025921-20260917055921-00691.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700291.63/warc/CC-MAIN-20260913072935-20260913102935-00622.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492995497.76/warc/CC-MAIN-20260915142231-20260915172231-00670.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699598.6/warc/CC-MAIN-20260905133841-20260905163841-00997.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699789.28/warc/CC-MAIN-20260908053654-20260908083654-00176.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699959.70/warc/CC-MAIN-20260911003841-20260911033841-00626.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699577.65/warc/CC-MAIN-20260905073245-20260905103245-00585.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699728.7/warc/CC-MAIN-20260907082029-20260907112029-00389.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699801.50/warc/CC-MAIN-20260908083825-20260908113825-00140.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700377.61/warc/CC-MAIN-20260913163800-20260913193800-00925.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700389.62/warc/CC-MAIN-20260913194028-20260913224028-00379.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699801.50/warc/CC-MAIN-20260908083825-20260908113825-00542.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699608.27/warc/CC-MAIN-20260905164208-20260905194208-00791.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492701162.69/warc/CC-MAIN-20260914140128-20260914170128-00611.warc.gz"
-  ],
-  "warcs_scanned": [
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699973.67/warc/CC-MAIN-20260911064402-20260911094402-00304.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699484.2/warc/CC-MAIN-20260904161806-20260904191806-00035.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699577.65/warc/CC-MAIN-20260905073245-20260905103245-00613.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699475.64/warc/CC-MAIN-20260904131603-20260904161603-00186.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699549.24/warc/CC-MAIN-20260905043015-20260905073015-00656.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700389.62/warc/CC-MAIN-20260913194028-20260913224028-00657.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788493000724.71/warc/CC-MAIN-20260917025921-20260917055921-00691.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700291.63/warc/CC-MAIN-20260913072935-20260913102935-00622.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492995497.76/warc/CC-MAIN-20260915142231-20260915172231-00670.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699598.6/warc/CC-MAIN-20260905133841-20260905163841-00997.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699789.28/warc/CC-MAIN-20260908053654-20260908083654-00176.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699959.70/warc/CC-MAIN-20260911003841-20260911033841-00626.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699577.65/warc/CC-MAIN-20260905073245-20260905103245-00585.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699728.7/warc/CC-MAIN-20260907082029-20260907112029-00389.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699801.50/warc/CC-MAIN-20260908083825-20260908113825-00140.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700377.61/warc/CC-MAIN-20260913163800-20260913193800-00925.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492700389.62/warc/CC-MAIN-20260913194028-20260913224028-00379.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699801.50/warc/CC-MAIN-20260908083825-20260908113825-00542.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492699608.27/warc/CC-MAIN-20260905164208-20260905194208-00791.warc.gz",
-    "crawl-data/CC-MAIN-2026-39/segments/1788492701162.69/warc/CC-MAIN-20260914140128-20260914170128-00611.warc.gz"
-  ],
+  "warcs_selected": {
+    "count": 20,
+    "sha256_of_sorted_list": "2ba1b47b84dde3eab57d981694ea4f8f234a076be94293f9f85d4c2546280585",
+    "note": "WARC file names withheld from the public repo (redaction); the maintainer keeps the list."
+  },
+  "warcs_scanned": {
+    "count": 20,
+    "sha256_of_sorted_list": "2ba1b47b84dde3eab57d981694ea4f8f234a076be94293f9f85d4c2546280585",
+    "note": "WARC file names withheld from the public repo (redaction); the maintainer keeps the list."
+  },
   "elapsed_s": 7415.6,
   "workers": 9,
   "page_timeout_s": 20,
@@ -109,7 +75,7 @@
     "a@aria-label": 1,
     "button@aria-label": 1,
     "hidden_attr": 1,
-    "meta[\u201drobots\u201d]": 1
+    "meta[”robots”]": 1
   },
   "finding_categories": {
     "ai_optout": 320,
@@ -148,7 +114,7 @@
   "hit_pages_saved": 275,
   "per_warc": [
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699973.67/warc/CC-MAIN-20260911064402-20260911094402-00304.warc.gz",
+      "warc_index": 1,
       "scan_s": 332.1,
       "records": 64660,
       "responses": 21553,
@@ -167,7 +133,7 @@
       "pages_per_s": 63.59
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699484.2/warc/CC-MAIN-20260904161806-20260904191806-00035.warc.gz",
+      "warc_index": 2,
       "scan_s": 357.1,
       "records": 66181,
       "responses": 22060,
@@ -186,7 +152,7 @@
       "pages_per_s": 60.54
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699577.65/warc/CC-MAIN-20260905073245-20260905103245-00613.warc.gz",
+      "warc_index": 3,
       "scan_s": 353.9,
       "records": 65995,
       "responses": 21998,
@@ -205,7 +171,7 @@
       "pages_per_s": 60.89
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699475.64/warc/CC-MAIN-20260904131603-20260904161603-00186.warc.gz",
+      "warc_index": 4,
       "scan_s": 362.3,
       "records": 65518,
       "responses": 21839,
@@ -224,7 +190,7 @@
       "pages_per_s": 59.01
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699549.24/warc/CC-MAIN-20260905043015-20260905073015-00656.warc.gz",
+      "warc_index": 5,
       "scan_s": 352.9,
       "records": 65662,
       "responses": 21887,
@@ -243,7 +209,7 @@
       "pages_per_s": 60.87
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700389.62/warc/CC-MAIN-20260913194028-20260913224028-00657.warc.gz",
+      "warc_index": 6,
       "scan_s": 365.7,
       "records": 65020,
       "responses": 21673,
@@ -262,7 +228,7 @@
       "pages_per_s": 57.96
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788493000724.71/warc/CC-MAIN-20260917025921-20260917055921-00691.warc.gz",
+      "warc_index": 7,
       "scan_s": 367.1,
       "records": 63907,
       "responses": 21302,
@@ -281,7 +247,7 @@
       "pages_per_s": 56.77
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700291.63/warc/CC-MAIN-20260913072935-20260913102935-00622.warc.gz",
+      "warc_index": 8,
       "scan_s": 366.0,
       "records": 65521,
       "responses": 21840,
@@ -300,7 +266,7 @@
       "pages_per_s": 58.44
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492995497.76/warc/CC-MAIN-20260915142231-20260915172231-00670.warc.gz",
+      "warc_index": 9,
       "scan_s": 377.9,
       "records": 64465,
       "responses": 21488,
@@ -319,7 +285,7 @@
       "pages_per_s": 55.67
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699598.6/warc/CC-MAIN-20260905133841-20260905163841-00997.warc.gz",
+      "warc_index": 10,
       "scan_s": 369.0,
       "records": 65332,
       "responses": 21777,
@@ -338,7 +304,7 @@
       "pages_per_s": 57.85
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699789.28/warc/CC-MAIN-20260908053654-20260908083654-00176.warc.gz",
+      "warc_index": 11,
       "scan_s": 368.5,
       "records": 65197,
       "responses": 21732,
@@ -357,7 +323,7 @@
       "pages_per_s": 57.82
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699959.70/warc/CC-MAIN-20260911003841-20260911033841-00626.warc.gz",
+      "warc_index": 12,
       "scan_s": 366.7,
       "records": 65560,
       "responses": 21853,
@@ -376,7 +342,7 @@
       "pages_per_s": 58.32
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699577.65/warc/CC-MAIN-20260905073245-20260905103245-00585.warc.gz",
+      "warc_index": 13,
       "scan_s": 385.9,
       "records": 65632,
       "responses": 21877,
@@ -395,7 +361,7 @@
       "pages_per_s": 55.68
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699728.7/warc/CC-MAIN-20260907082029-20260907112029-00389.warc.gz",
+      "warc_index": 14,
       "scan_s": 385.2,
       "records": 66223,
       "responses": 22074,
@@ -414,7 +380,7 @@
       "pages_per_s": 56.07
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699801.50/warc/CC-MAIN-20260908083825-20260908113825-00140.warc.gz",
+      "warc_index": 15,
       "scan_s": 366.0,
       "records": 65572,
       "responses": 21857,
@@ -433,7 +399,7 @@
       "pages_per_s": 58.43
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700377.61/warc/CC-MAIN-20260913163800-20260913193800-00925.warc.gz",
+      "warc_index": 16,
       "scan_s": 354.2,
       "records": 63922,
       "responses": 21307,
@@ -452,7 +418,7 @@
       "pages_per_s": 58.85
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492700389.62/warc/CC-MAIN-20260913194028-20260913224028-00379.warc.gz",
+      "warc_index": 17,
       "scan_s": 375.2,
       "records": 64258,
       "responses": 21419,
@@ -472,7 +438,7 @@
       "pages_per_s": 55.93
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699801.50/warc/CC-MAIN-20260908083825-20260908113825-00542.warc.gz",
+      "warc_index": 18,
       "scan_s": 387.6,
       "records": 65098,
       "responses": 21699,
@@ -492,7 +458,7 @@
       "pages_per_s": 54.85
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492699608.27/warc/CC-MAIN-20260905164208-20260905194208-00791.warc.gz",
+      "warc_index": 19,
       "scan_s": 408.3,
       "records": 66562,
       "responses": 22187,
@@ -512,7 +478,7 @@
       "pages_per_s": 53.27
     },
     {
-      "warc": "crawl-data/CC-MAIN-2026-39/segments/1788492701162.69/warc/CC-MAIN-20260914140128-20260914170128-00611.warc.gz",
+      "warc_index": 20,
       "scan_s": 391.0,
       "records": 65401,
       "responses": 21800,
