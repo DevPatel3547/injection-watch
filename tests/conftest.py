@@ -72,3 +72,27 @@ def site():
 def _no_proxy_for_localhost(monkeypatch):
     monkeypatch.setenv("NO_PROXY", "127.0.0.1,localhost")
     monkeypatch.setenv("no_proxy", "127.0.0.1,localhost")
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: long-running test; CI quick runs use -m 'not slow'")
+
+
+def chromium_launch_kwargs() -> dict:
+    """Playwright launch kwargs. INJECTIONWATCH_CHROMIUM points at a Chromium/headless_shell binary when the
+    Playwright-managed browser is not installed (offline boxes, distro Chromium)."""
+    import os
+
+    exe = os.environ.get("INJECTIONWATCH_CHROMIUM")
+    return {"executable_path": exe} if exe else {}
+
+
+def chromium_available() -> bool:
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            p.chromium.launch(**chromium_launch_kwargs()).close()
+        return True
+    except Exception:
+        return False

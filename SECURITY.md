@@ -3,7 +3,7 @@
 ## Reporting a vulnerability in InjectionWatch
 
 Please **do not open a public issue** for security problems. Use GitHub's private vulnerability
-reporting ("Security" tab -> "Report a vulnerability"), or email the contact in `injectionwatch/config.py`.
+reporting ("Security" tab -> "Report a vulnerability").
 We aim to acknowledge reports within 3 working days and to give an initial assessment within 10.
 
 In scope:
@@ -16,7 +16,11 @@ In scope:
 * the detector itself being turned against consumers, e.g. payloads that survive excerpt truncation and
   defanging in a way that makes the *feed* an injection vector;
 * the browser extension: anything that sends more data than documented, remote code, or privilege abuse;
-* the MCP server and `safe_fetch` helper.
+* the agent-side guard: `guard.fetch` / `safe_fetch`, the MCP `fetch_url_safely` tool and the LangChain
+  integration (SSRF to private or link-local addresses, redirect tricks, DNS rebinding, oversized bodies);
+* the X-ray page on the site: pasted HTML executing script or loading third-party resources;
+* **re-identification of sites held back during disclosure** from anything in the repository or a
+  published feed (record locators, paths, timestamps, payload text). See `docs/threat-model.md` §3.
 
 Out of scope: detector *evasions* (a payload the rules miss). Those are welcome as normal issues with a
 minimal synthetic fixture. Please do not include live malicious URLs in public issues.
@@ -33,6 +37,8 @@ A listing means our detector found text on that page that addresses AI agents wi
 evidence in the `reasons` field). Most such text we see on legitimate sites was **planted by an attacker**
 through a compromised plugin, widget or comment system. Search the page source for the excerpt or the
 element path in the entry, remove it, then file a takedown request so we re-check.
+
+The full threat model is in [docs/threat-model.md](docs/threat-model.md).
 
 ## Supported versions
 
