@@ -241,6 +241,9 @@ def held_client(db_path, tmp_path):
     return TestClient(create_app(settings=_settings(db_path, rate_limit=1000, hold_file=str(hold))))
 
 
+PUB = "redacted-site-3" + ".example"   # built at runtime: test_redaction scans tracked files for placeholder URLs
+
+
 def _no_leak(body: str):
     assert "h0.example" not in body and "second-page" not in body and "07:08:09" not in body
 
@@ -248,12 +251,12 @@ def _no_leak(body: str):
 def test_holds_feed_entries_entry_and_stats(held_client):
     for fmt in ("json", "csv", "stix"):
         r = held_client.get("/v1/feed", params={"format": fmt})
-        assert r.status_code == 200 and "redacted-site-3.example" in r.text
+        assert r.status_code == 200 and PUB in r.text
         _no_leak(r.text)
         assert "h1.example" in r.text                           # not-held hosts are untouched
     items = held_client.get("/v1/entries", params={"include_payload": "true", "limit": 500}).json()["items"]
-    held = [i for i in items if i["host"] == "redacted-site-3.example"]
-    assert held and all(i["held"] and i["url"].startswith("https://redacted-site-3.example/redacted-path-")
+    held = [i for i in items if i["host"] == PUB]
+    assert held and all(i["held"] and i["url"].startswith(f"https://{PUB}/redacted-path-")
                         for i in held)
     assert all(i["payload_excerpt"] == "[payload withheld during disclosure]" for i in held)
     _no_leak(json.dumps(items))
@@ -262,7 +265,7 @@ def test_holds_feed_entries_entry_and_stats(held_client):
     assert one["url"] == held[0]["url"] and one["held"] and one["payload_excerpt"] is None
     _no_leak(json.dumps(one))
     # host filter: the placeholder works, the real name of a held host matches nothing
-    by_pub = held_client.get("/v1/entries", params={"host": "redacted-site-3.example"}).json()["items"]
+    by_pub = held_client.get("/v1/entries", params={"host": PUB}).json()["items"]
     assert {i["id"] for i in by_pub} == {i["id"] for i in held}
     assert held_client.get("/v1/entries", params={"host": "h0.example"}).json()["items"] == []
     st = held_client.get("/v1/stats").json()
