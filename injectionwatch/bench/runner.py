@@ -176,6 +176,37 @@ def _save_cands(p: Path, cands: list[Candidate]) -> None:
     tmp.replace(p)
 
 
+class RenderPool:
+    """One Chromium for a whole run; restarted when it crashes (shared, memory-tight machines). A page that fails
+    twice falls back to the static candidates and is counted in ``failures``, which the report publishes."""
+
+    def __init__(self) -> None:
+        self.renderer: Any = None
+        self.failures = 0
+        self.restarts = 0
+
+    def candidates(self, html: str, resources: dict[str, str]) -> list[Candidate] | None:
+        for attempt in range(2):
+            try:
+                if self.renderer is None:
+                    self.renderer = make_renderer()
+                return list(self.renderer.candidates_from_html(html, resources=resources))
+            except Exception:
+                self.close()
+                self.restarts += 1
+                if attempt:
+                    self.failures += 1
+        return None
+
+    def close(self) -> None:
+        if self.renderer is not None:
+            try:
+                self.renderer.close()
+            except Exception:  # browser already gone
+                pass
+            self.renderer = None
+
+
 def extract_page(html: str, resources: dict[str, str], mode: str, renderer: Any = None) -> list[Candidate]:
     def resolver(u: str) -> str | None:
         return resources.get(urlsplit(u).path)
@@ -183,9 +214,18 @@ def extract_page(html: str, resources: dict[str, str], mode: str, renderer: Any 
     cands = extract_candidates(html, None, css_resolver=resolver if mode in ("static_css", "rendered") else None,
                                base_url=BASE_URL)
     if mode == "rendered":
-        rc = renderer.candidates_from_html(html, resources=resources)
+        if isinstance(renderer, RenderPool):
+            rc = renderer.candidates(html, resources)
+            if rc is None:
+                raise RenderFailed()
+        else:
+            rc = renderer.candidates_from_html(html, resources=resources)
         cands = merge_rendered(cands, rc)
     return cands
+
+
+class RenderFailed(Exception):
+    pass
 
 
 def planted_key(text: str, technique: str) -> str:
@@ -202,16 +242,22 @@ def evaluate_spec(spec: PageSpec, mode: str, scan_kwargs: dict[str, Any] | None 
     cpath = _cand_cache_path(mode, html, res, fp) if (use_cache and fp) else None
     if cpath is not None and cpath.exists():
         cands = _load_cands(cpath)
+    render_failed = False
     if cands is None:
-        cands = extract_page(html, res, mode, renderer)
-        if cpath is not None:
-            _save_cands(cpath, cands)
+        try:
+            cands = extract_page(html, res, mode, renderer)
+            if cpath is not None:
+                _save_cands(cpath, cands)
+        except RenderFailed:
+            render_failed = True
+            cands = extract_page(html, res, "static_css")
     t0 = time.perf_counter()
     result = scan_candidates(cands, BASE_URL, **(scan_kwargs or {}))
     scan_ms = (time.perf_counter() - t0) * 1000
     flagged = [f for f in result.findings if f.flagged]
     row: dict[str, Any] = {k: v for k, v in asdict(spec).items() if k not in ("text", "carrier_path", "inline_html")}
-    row.update({"mode": mode, "page_flagged": bool(flagged), "n_candidates": len(cands), "scan_ms": round(scan_ms, 2)})
+    row.update({"mode": mode, "page_flagged": bool(flagged), "n_candidates": len(cands), "scan_ms": round(scan_ms, 2),
+                "render_failed": render_failed})
     if spec.kind in ("positive", "benign_planted"):
         key = planted_key(spec.text, spec.technique)
         planted = [c for c in cands if key and key in normalize_payload(c.text)]
@@ -283,15 +329,15 @@ def run_specs(specs: list[PageSpec], mode: str = "static", scan_kwargs: dict[str
     fp = extractor_fingerprint(mode) if use_cache else ""
     rows: list[dict[str, Any]] = []
     if mode == "rendered" or jobs <= 1:
-        renderer = make_renderer() if mode == "rendered" else None
+        rpool = RenderPool() if mode == "rendered" else None
         try:
             for i, s in enumerate(specs):
-                rows.append(evaluate_spec(s, mode, scan_kwargs, use_cache, renderer, fp))
+                rows.append(evaluate_spec(s, mode, scan_kwargs, use_cache, rpool, fp))
                 if progress:
                     progress(i + 1, len(specs))
         finally:
-            if renderer is not None:
-                renderer.close()
+            if rpool is not None:
+                rpool.close()
     else:
         import multiprocessing as mp
 

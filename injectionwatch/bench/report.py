@@ -107,6 +107,8 @@ def summarise(rows: list[dict[str, Any]], *, detector: dict[str, Any], split: st
         "by_payload_family": by_fam,
         "by_language": by_lang,
         "timing": {"scan_ms_mean": round(sum(r["scan_ms"] for r in rows) / max(1, len(rows)), 2)},
+        # rendered mode: pages where Chromium crashed twice and the static_css candidates were used instead
+        "render_failures": sum(bool(r.get("render_failed")) for r in rows),
     }
 
 
