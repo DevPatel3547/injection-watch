@@ -51,6 +51,20 @@ def _read_input(path: str) -> str:
     return p.read_text("utf-8", errors="replace")
 
 
+def _holds(path: str | None) -> Any:
+    """``--hold FILE`` (else $INJECTIONWATCH_HOLD_FILE). A named file that is missing is an error, never a silent
+    'no holds': publishing without the holds would leak the held sites."""
+    from . import export
+
+    if path is not None and not Path(path).is_file():
+        raise UsageError(f"hold file {path} not found", "pass the private hold list kept outside the repo")
+    env = os.environ.get(export.HOLD_ENV)
+    if path is None and env and not Path(env).is_file():
+        raise UsageError(f"${export.HOLD_ENV} points to {env}, which does not exist",
+                         "fix the path or unset the variable")
+    return export.load_holds(path)
+
+
 def _add_bench(sub: Any) -> None:
     import importlib
 
@@ -149,6 +163,9 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--db", default="injectionwatch.db")
     e.add_argument("--format", choices=["json", "csv", "stix"], default="json")
     e.add_argument("--out", default="-")
+    e.add_argument("--hold", default=None, metavar="FILE",
+                   help="private-disclosure hold list; held sites are exported redacted (default: "
+                        "$INJECTIONWATCH_HOLD_FILE)")
 
     pb = sub.add_parser("publish", help="build the static GitHub Pages site (dashboard + feed + lookup shards)")
     pb.add_argument("--db", default="injectionwatch.db")
@@ -158,6 +175,9 @@ def build_parser() -> argparse.ArgumentParser:
                     help="comma-separated severities to publish as entries (default: all but ai_optout; "
                          "e.g. manipulative,malicious)")
     pb.add_argument("--reviewed-only", action="store_true", help="publish only entries reviewed as true_positive")
+    pb.add_argument("--hold", default=None, metavar="FILE",
+                    help="private-disclosure hold list; held sites are published redacted (default: "
+                         "$INJECTIONWATCH_HOLD_FILE)")
 
     rv = sub.add_parser("review", help="apply human labels (JSONL: url, payload_hash, label, severity, note)")
     rv.add_argument("labels")
@@ -297,7 +317,7 @@ def _dispatch(a: argparse.Namespace) -> int:
         from . import export
         from .db import DB
 
-        entries = DB(a.db).feed(limit=10_000_000)
+        entries = export.apply_holds(DB(a.db).feed(limit=10_000_000), _holds(a.hold))
         data = {"json": export.to_json, "csv": export.to_csv, "stix": export.to_stix}[a.format](entries)
         if a.out == "-":
             sys.stdout.write(data)
@@ -309,7 +329,7 @@ def _dispatch(a: argparse.Namespace) -> int:
 
         sev = [x.strip() for x in a.severities.split(",") if x.strip()] if a.severities else None
         print(json.dumps(build_site(DB(a.db), a.out, data_note=a.note, severities=sev,
-                                    reviewed_only=a.reviewed_only), indent=2))
+                                    reviewed_only=a.reviewed_only, holds=_holds(a.hold)), indent=2))
     elif a.cmd == "review":
         from .classify import SEVERITIES
         from .db import DB

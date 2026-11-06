@@ -18,7 +18,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["rules.js", "hidden_text.js", "scorer.js", "content.js"],
+      "js": ["rules.js", "hidden_text.js", "scorer.js", "collect.js", "content.js"],
       "run_at": "document_idle",
       "all_frames": false
     }

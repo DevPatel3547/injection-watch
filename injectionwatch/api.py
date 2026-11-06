@@ -61,6 +61,7 @@ class Settings:
     rate_db: str = "ratelimit.db"
     trust_proxy: bool = False            # honour X-Forwarded-For (only behind a proxy you control)
     cache_max_age: int = 300
+    hold_file: str | None = None         # private-disclosure hold list ($INJECTIONWATCH_HOLD_FILE)
     salt: str = field(default_factory=lambda: secrets.token_hex(16))
 
     @classmethod
@@ -74,6 +75,7 @@ class Settings:
             rate_backend=env.get("INJECTIONWATCH_RATE_BACKEND", cls.rate_backend),
             rate_db=env.get("INJECTIONWATCH_RATE_DB", cls.rate_db),
             trust_proxy=env.get("INJECTIONWATCH_TRUST_PROXY", "0") in ("1", "true", "yes"),
+            hold_file=env.get(export.HOLD_ENV) or None,
         )
         if env.get("INJECTIONWATCH_LOG_SALT"):
             s.salt = env["INJECTIONWATCH_LOG_SALT"]
@@ -132,6 +134,8 @@ class EntryOut(BaseModel):
     location: str
     techniques: list[str]
     target: str
+    held: bool = Field(False, description="true when the site is under a private-disclosure hold: host, path, "
+                                         "times and payload are redacted")
     confidence: float
     reasons: list[str]
     classifier: str | None = None
@@ -285,7 +289,39 @@ def create_app(db_path: str | None = None, rate_limit: int | None = None, window
     )
     db = DB(settings.db_path)
     limiter = rate_backend or make_backend(settings.rate_backend, settings.rate_db)
+    # Held hosts (private disclosure): every read route serves them only in redacted form. Loaded once at
+    # start-up; restart the server after editing the hold file. The file never leaves the server.
+    holds = export.load_holds(settings.hold_file) if settings.hold_file else export.Holds()
+    held_hosts = {f"redacted-site-{n}.example": h for h, n in holds.hosts.items()}
+    _held_cache: dict[str, Any] = {"version": None, "by_id": {}}
     app.state.db = db
+    app.state.holds = holds
+
+    def _is_held(host: str | None) -> bool:
+        return bool(holds) and (host or "").lower() in holds.hosts
+
+    def _redact(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Redact held rows. Path numbers (/redacted-path-K) are ranked over ALL entries of the held host,
+        so an entry gets the same public URL from every endpoint and every page of results."""
+        if not holds or not any(_is_held(r.get("host")) for r in rows):
+            return rows
+        ver = db.data_version()
+        if _held_cache["version"] != ver:
+            every = [e for e in db.feed(include_inactive=True, limit=10_000_000) if _is_held(e.get("host"))]
+            _held_cache["by_id"] = {e["id"]: e for e in export.apply_holds(every, holds)}
+            _held_cache["version"] = ver
+        by_id = _held_cache["by_id"]
+        out = []
+        for r in rows:
+            if not _is_held(r.get("host")):
+                out.append(r)
+                continue
+            red = by_id.get(r.get("id")) or export.apply_holds([r], holds)[0]
+            # keep the caller's include_payload choice: the redacted row carries at most an approved fragment
+            if r.get("payload_excerpt") is None or "payload_excerpt" not in r:
+                red = {**red, "payload_excerpt": None}
+            out.append(red)
+        return out
     app.state.settings = settings
 
     app.add_middleware(
@@ -381,9 +417,18 @@ def create_app(db_path: str | None = None, rate_limit: int | None = None, window
             verdict = "observed_clean"
         else:
             verdict = "unknown"
+        held = _is_held(urlsplit(normalize_url(url)).hostname)
+        if held:
+            # A held URL still answers "flagged" (that protects agents, and it only confirms a URL the caller
+            # already has), but with no entry metadata, host counts or capture times.
+            entries = []
         body = CheckResponse(url=normalize_url(url), verdict=verdict, entries=[EntryOut(**e) for e in entries],
-                             host_active_entries=db.host_entry_count(url),
-                             last_observed=last.get("fetched_at") if last else None, checked_at=now_iso())
+                             host_active_entries=0 if held else db.host_entry_count(url),
+                             last_observed=None if held else (last.get("fetched_at") if last else None),
+                             checked_at=now_iso(),
+                             **({"note": "this site is under a private-disclosure hold: details are withheld. "
+                                         "unknown = never observed; observed_clean != safe. This endpoint never "
+                                         "fetches the URL."} if held else {}))
         return cached(request, etag, body.model_dump(mode="json"))
 
     @app.get("/v1/entries", tags=["feed"], response_model=EntryPage)
@@ -402,7 +447,14 @@ def create_app(db_path: str | None = None, rate_limit: int | None = None, window
                      include_inactive)
         if _not_modified(request, etag):
             return cached(request, etag, None)
-        rows, nxt = db.entries_page(cursor, limit, since, host, category, intent, include_inactive)
+        db_host = host
+        if host and holds:
+            if host.lower() in held_hosts:          # the public placeholder name maps to the held host
+                db_host = held_hosts[host.lower()]
+            elif _is_held(host):                    # the real name of a held host matches nothing
+                db_host = "\x00no-such-host"
+        rows, nxt = db.entries_page(cursor, limit, since, db_host, category, intent, include_inactive)
+        rows = _redact(rows)
         page = EntryPage(items=[EntryOut(**_public_entry(r, include_payload)) for r in rows],
                          next_cursor=nxt, limit=limit)
         resp = cached(request, etag, page.model_dump(mode="json"))
@@ -417,6 +469,7 @@ def create_app(db_path: str | None = None, rate_limit: int | None = None, window
         e = db.get_entry(entry_id)
         if e is None:
             raise HTTPException(404, "no such entry")
+        e = _redact([e])[0]
         return cached(request, _etag(db.data_version(), entry_id, include_payload),
                       EntryOut(**_public_entry(e, include_payload)).model_dump(mode="json"))
 
@@ -428,7 +481,7 @@ def create_app(db_path: str | None = None, rate_limit: int | None = None, window
         etag = _etag(db.data_version(), format, since, include_inactive, limit)
         if _not_modified(request, etag):
             return cached(request, etag, None)
-        rows = db.feed(since=since, include_inactive=include_inactive, limit=limit)
+        rows = _redact(db.feed(since=since, include_inactive=include_inactive, limit=limit))
         if format == "csv":
             return cached(request, etag, export.to_csv(rows), "text/csv; charset=utf-8")
         if format == "stix":
@@ -440,7 +493,11 @@ def create_app(db_path: str | None = None, rate_limit: int | None = None, window
         etag = _etag(db.data_version(), "stats")
         if _not_modified(request, etag):
             return cached(request, etag, None)
-        return cached(request, etag, db.stats())
+        st = db.stats()
+        if holds:
+            # aggregate counts only (no host names); say how many of the counted hosts are held
+            st["held_hosts"] = len(holds.hosts)
+        return cached(request, etag, st)
 
     # ---------------------------------------------------------------- submissions
     @app.post("/v1/submit", tags=["submissions"], status_code=202, response_model=SubmissionAccepted)

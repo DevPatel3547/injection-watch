@@ -197,3 +197,39 @@ def test_extension_dist_is_store_ready():
     from injectionwatch.config import VERSION
 
     assert manifest["version"] == VERSION == json.loads((ROOT / "extension/package.json").read_text())["version"]
+
+
+@pytest.mark.skipif(not _chromium_ok() or not (ROOT / "extension/dist/collect.js").exists(),
+                    reason="Playwright/Chromium or built extension missing")
+def test_collect_js_is_page_safe_and_matches_python_stage1(site):
+    """collect.js (shared by the extension and the site X-ray) runs in a plain page with no extension APIs
+    and flags the same fixtures the Python stage 1 flags."""
+    from playwright.sync_api import sync_playwright
+
+    from injectionwatch.render import chromium_executable
+
+    dist = ROOT / "extension" / "dist"
+    scripts = "".join((dist / f).read_text("utf-8") + "\n" for f in ("rules.js", "hidden_text.js", "scorer.js",
+                                                                      "collect.js"))
+    names = ["01_comment_ignore_previous.html", "06_hidden_display_none.html", "12_aria_hidden_injection.html",
+             "15_alt_injection.html", "18_jsonld_injection.html", "02_comment_benign_dev.html",
+             "13_sr_only_benign.html", "14_hidden_benign_ui.html"]
+    with sync_playwright() as p:
+        b = p.chromium.launch(executable_path=chromium_executable())
+        try:
+            pg = b.new_page()
+            for name in names:   # served from 127.0.0.1: a secure context, so crypto.subtle (iwHash) exists
+                html = load_fixture(name)
+                site.html("/" + name, html)
+                pg.goto(site.base + "/" + name)
+                pg.add_script_tag(content=scripts)
+                assert pg.evaluate("typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id")
+                js = pg.evaluate("async () => (await iwScanDocument(document)).length")
+                py = sum(1 for f in scan_html(html).findings)
+                assert (js > 0) == (py > 0), (name, js, py)
+            # works on a parsed, unrendered document too (what the site does with pasted HTML)
+            n = pg.evaluate("""async (h) => (await iwScanDocument(new DOMParser().parseFromString(h, 'text/html')))
+                               .filter(f => f.location === 'comment').length""", load_fixture(names[0]))
+            assert n >= 1
+        finally:
+            b.close()
