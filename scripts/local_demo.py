@@ -2,6 +2,8 @@
 
 crawl -> DB -> cloaking check -> JSON/CSV/STIX export -> State of Injections report.
 Everything is synthetic; the report is labelled as such. No internet access needed.
+Outputs go to the git-ignored ``build/demo/`` by default, so ``make demo`` leaves the tree clean;
+``--out reports`` regenerates the committed sample outputs.
 """
 from __future__ import annotations
 
@@ -69,10 +71,12 @@ def serve(routes):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--db", default="demo.db")
-    ap.add_argument("--out", default=str(ROOT / "reports"))
+    ap.add_argument("--db", default=None, help="default: <out>/demo.db")
+    ap.add_argument("--out", default=str(ROOT / "build" / "demo"))
     a = ap.parse_args()
     os.environ.setdefault("NO_PROXY", "127.0.0.1,localhost")
+    Path(a.out).mkdir(parents=True, exist_ok=True)
+    a.db = a.db or str(Path(a.out) / "demo.db")
     if os.path.exists(a.db):
         os.remove(a.db)
     routes = build_routes()
@@ -92,7 +96,7 @@ def main():
         if d.findings:
             db.store_scan(base + "/cloaked", ScanResult(base + "/cloaked", d.findings), "cloak-check", source="cloak")
     out = Path(a.out)
-    out.mkdir(exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     entries = db.feed(limit=100000)
     (out / "demo_feed.json").write_text(export.to_json(entries), encoding="utf-8")
     (out / "demo_feed.csv").write_text(export.to_csv(entries), encoding="utf-8")

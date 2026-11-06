@@ -1,0 +1,28 @@
+# .github/workflows/injectionwatch.yml: scan the built site on every push and pull request.
+# Copy this into your repository and change the build step and `path` to match your site.
+name: InjectionWatch
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write   # only needed for upload-sarif
+
+jobs:
+  scan-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build your site here, for example:
+      # - run: npm ci && npm run build          # -> dist/
+      # - run: bundle exec jekyll build          # -> _site/
+
+      - uses: DevPatel3547/injection-watch@main   # pin a commit SHA in production
+        with:
+          path: _site
+          fail-on: flagged
+          upload-sarif: "true"   # findings show up under Security -> Code scanning

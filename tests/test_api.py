@@ -226,3 +226,60 @@ def test_settings_from_env(monkeypatch):
     s = Settings.from_env(db_path="x.db")
     assert s.cors_origins == ["https://a.example", "https://b.example"] and s.rate_limit == 7 and s.trust_proxy
     assert s.salt == "s" and s.db_path == "x.db"
+
+
+# --------------------------------------------------------------------------- private-disclosure holds
+
+@pytest.fixture
+def held_client(db_path, tmp_path):
+    hold = tmp_path / "holds.txt"
+    hold.write_text("# private\nh0.example 3\n")
+    db = DB(db_path)
+    db.store_scan("https://h0.example/second-page?id=77", scan_html(load_fixture("15_alt_injection.html")), "ev",
+                  "2026-10-03T07:08:09+00:00")
+    db.close()
+    return TestClient(create_app(settings=_settings(db_path, rate_limit=1000, hold_file=str(hold))))
+
+
+PUB = "redacted-site-3" + ".example"   # built at runtime: test_redaction scans tracked files for placeholder URLs
+
+
+def _no_leak(body: str):
+    assert "h0.example" not in body and "second-page" not in body and "07:08:09" not in body
+
+
+def test_holds_feed_entries_entry_and_stats(held_client):
+    for fmt in ("json", "csv", "stix"):
+        r = held_client.get("/v1/feed", params={"format": fmt})
+        assert r.status_code == 200 and PUB in r.text
+        _no_leak(r.text)
+        assert "h1.example" in r.text                           # not-held hosts are untouched
+    items = held_client.get("/v1/entries", params={"include_payload": "true", "limit": 500}).json()["items"]
+    held = [i for i in items if i["host"] == PUB]
+    assert held and all(i["held"] and i["url"].startswith(f"https://{PUB}/redacted-path-")
+                        for i in held)
+    assert all(i["payload_excerpt"] == "[payload withheld during disclosure]" for i in held)
+    _no_leak(json.dumps(items))
+    # the same entry gets the same public path from every route
+    one = held_client.get(f"/v1/entries/{held[0]['id']}").json()
+    assert one["url"] == held[0]["url"] and one["held"] and one["payload_excerpt"] is None
+    _no_leak(json.dumps(one))
+    # host filter: the placeholder works, the real name of a held host matches nothing
+    by_pub = held_client.get("/v1/entries", params={"host": PUB}).json()["items"]
+    assert {i["id"] for i in by_pub} == {i["id"] for i in held}
+    assert held_client.get("/v1/entries", params={"host": "h0.example"}).json()["items"] == []
+    st = held_client.get("/v1/stats").json()
+    assert st["held_hosts"] == 1 and "h0.example" not in json.dumps(st)
+
+
+def test_holds_check_still_flags_without_metadata(held_client):
+    r = held_client.get("/v1/check", params={"url": "https://h0.example/x", "include_payload": "true"}).json()
+    assert r["verdict"] == "flagged" and r["entries"] == [] and r["host_active_entries"] == 0
+    assert r["last_observed"] is None and "hold" in r["note"]
+    other = held_client.get("/v1/check", params={"url": "https://h1.example/x"}).json()
+    assert other["verdict"] == "flagged" and other["entries"] and other["host_active_entries"] >= 1
+
+
+def test_missing_hold_file_fails_closed(db_path, tmp_path):
+    with pytest.raises(FileNotFoundError):
+        create_app(settings=_settings(db_path, hold_file=str(tmp_path / "missing.txt")))

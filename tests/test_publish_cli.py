@@ -112,7 +112,9 @@ def test_dashboard_renders_and_client_side_check(tmp_path):
     errors: list[str] = []
     try:
         with sync_playwright() as p:
-            b = p.chromium.launch()
+            from .conftest import chromium_launch_kwargs
+
+            b = p.chromium.launch(**chromium_launch_kwargs())
             pg = b.new_page()
             pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
@@ -236,3 +238,39 @@ def test_v02_database_is_migrated(tmp_path):
     con.close()
     db = DB(str(path))
     assert {e["host"]: e["severity"] for e in db.feed()} == {"a.example": "ai_optout", "b.example": "malicious"}
+
+
+def test_export_and_publish_apply_hold_file(tmp_path, monkeypatch, capsys):
+    main = cli.main
+    from injectionwatch.export import HOLD_ENV
+
+    monkeypatch.delenv(HOLD_ENV, raising=False)
+    db_path = str(tmp_path / "h.db")
+    db = DB(db_path)
+    db.store_scan("https://held.example/secret-slug", scan_html(load_fixture("06_hidden_display_none.html")), "ev")
+    db.store_scan("https://open.example/a", scan_html(load_fixture("01_comment_ignore_previous.html")), "ev")
+    db.close()
+    hold = tmp_path / "holds.txt"
+    hold.write_text("held.example 2\n")
+    out = tmp_path / "feed.json"
+    assert main(["export", "--db", db_path, "--hold", str(hold), "--out", str(out)]) == 0
+    text = out.read_text()
+    assert "redacted-site-2.example/redacted-path-1" in text and "open.example" in text
+    assert "held.example" not in text and "secret-slug" not in text
+    for fmt in ("csv", "stix"):
+        assert main(["export", "--db", db_path, "--hold", str(hold), "--format", fmt]) == 0
+        assert "held.example" not in capsys.readouterr().out
+    monkeypatch.setenv(HOLD_ENV, str(hold))                   # the env var is the default
+    assert main(["export", "--db", db_path]) == 0
+    assert "held.example" not in capsys.readouterr().out
+    site_dir = tmp_path / "site"
+    monkeypatch.delenv(HOLD_ENV)
+    assert main(["publish", "--db", db_path, "--out", str(site_dir), "--hold", str(hold)]) == 0
+    capsys.readouterr()
+    blob = "".join(p.read_text("utf-8", errors="replace") for p in site_dir.rglob("*") if p.is_file())
+    assert "redacted-site-2.example" in blob and "held.example" not in blob and "secret-slug" not in blob
+    # a named hold file that does not exist must stop the run, never publish unredacted
+    assert main(["publish", "--db", db_path, "--out", str(tmp_path / "s2"), "--hold", str(tmp_path / "nope")]) == 2
+    assert "hold file" in capsys.readouterr().err and not (tmp_path / "s2").exists()
+    monkeypatch.setenv(HOLD_ENV, str(tmp_path / "nope"))
+    assert main(["export", "--db", db_path]) == 2

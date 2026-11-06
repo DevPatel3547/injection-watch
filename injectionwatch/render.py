@@ -10,7 +10,10 @@ by the browser itself.
 * ``candidates_from_url`` renders a live page; images, media and fonts are blocked (politeness,
   speed); documents, stylesheets and scripts load normally.
 
-Browsers are looked up in ``PLAYWRIGHT_BROWSERS_PATH`` (``/opt/pw-browsers`` in the dev sandbox).
+Chromium: ``$INJECTIONWATCH_CHROMIUM`` (path to a chromium / headless_shell / Chrome binary) wins; otherwise
+Playwright's own download (``python -m playwright install chromium``, honouring ``PLAYWRIGHT_BROWSERS_PATH``).
+On macOS an installed Google Chrome also works: ``INJECTIONWATCH_CHROMIUM="/Applications/Google
+Chrome.app/Contents/MacOS/Google Chrome"``.
 """
 from __future__ import annotations
 
@@ -20,6 +23,7 @@ from importlib import resources as pkg_resources
 from typing import Any
 from urllib.parse import urlsplit
 
+from .errors import ChromiumNotFound, MissingDependency
 from .extract import Candidate
 
 JS_SOURCE = pkg_resources.files("injectionwatch").joinpath("js/hidden_text.js").read_text("utf-8")
@@ -27,6 +31,31 @@ _EVAL = "() => { %s\n return injectionwatchHiddenText(document); }" % JS_SOURCE.
     'if (typeof module !== "undefined"', 'if (false && typeof module !== "undefined"')
 FAKE_ORIGIN = "https://render.invalid/"
 _BLOCK_LIVE = {"image", "media", "font"}
+CHROMIUM_ENV = "INJECTIONWATCH_CHROMIUM"
+MAC_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+
+def chromium_hint() -> str:
+    import sys
+
+    base = "python -m playwright install chromium"
+    if sys.platform == "darwin":
+        return (f"{base}  (or use an installed Chrome: export {CHROMIUM_ENV}=\"{MAC_CHROME}\")")
+    if sys.platform.startswith("linux"):
+        return f"{base} --with-deps  (or set {CHROMIUM_ENV}=/path/to/chromium)"
+    return f"{base}  (or set {CHROMIUM_ENV}=path\\to\\chrome.exe)"
+
+
+def chromium_executable() -> str | None:
+    """The explicit Chromium override, if set and present (None = let Playwright find its own)."""
+    import os
+
+    p = os.environ.get(CHROMIUM_ENV, "").strip()
+    if not p:
+        return None
+    if not os.path.isfile(p):
+        raise ChromiumNotFound(f"{CHROMIUM_ENV} points to {p!r}, which does not exist", chromium_hint())
+    return p
 
 
 def _content_type(path: str) -> str:
@@ -36,17 +65,23 @@ def _content_type(path: str) -> str:
 
 
 class Renderer:
-    def __init__(self, user_agent: str | None = None, timeout_ms: int = 15000):
-        from playwright.sync_api import sync_playwright
-
+    def __init__(self, user_agent: str | None = None, timeout_ms: int = 15000, executable_path: str | None = None):
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as e:
+            raise MissingDependency("playwright", "render", "the rendered pass") from e
+        exe = executable_path or chromium_executable()
         self._pw = sync_playwright().start()
         try:
-            self._browser = self._pw.chromium.launch(headless=True)
+            self._browser = self._pw.chromium.launch(headless=True, executable_path=exe)
             self._ctx = self._browser.new_context(user_agent=user_agent, java_script_enabled=True,
                                                   service_workers="block")
-        except Exception:
+        except Exception as e:
             self._pw.stop()
-            raise
+            msg = str(e)
+            if "Executable doesn't exist" in msg or ("executable" in msg.lower() and "not found" in msg.lower()):
+                raise ChromiumNotFound("Playwright is installed but no Chromium was found", chromium_hint()) from None
+            raise ChromiumNotFound(f"could not start Chromium: {msg.splitlines()[0][:160]}", chromium_hint()) from None
         self.timeout_ms = timeout_ms
 
     @staticmethod
