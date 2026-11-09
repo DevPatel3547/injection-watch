@@ -95,6 +95,8 @@ above. No compiler is needed: `lxml` ships arm64 wheels. Optional pieces:
   either `export INJECTIONWATCH_CHROMIUM="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` or
   download Playwright's Chromium with `"$(pipx environment --value PIPX_LOCAL_VENVS)/injectionwatch/bin/python" -m playwright install chromium`;
 * the browser extension build: `brew install node`;
+* IW-Bench (`make bench-data`): `git` (Xcode Command Line Tools, `xcode-select --install`) and about 35 MB
+  in `~/.cache/injectionwatch`;
 * the optional LLM stage: `export ANTHROPIC_API_KEY=...` (add it to `~/.zshrc`), or a local model with
   `brew install ollama`.
 
