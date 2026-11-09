@@ -1,0 +1,1507 @@
+{
+ "model": "ml_model.json",
+ "threshold": 0.87,
+ "meta": {
+  "trained_on": "IW-Bench dev split (see scripts/train_ml.py)",
+  "seed": 1,
+  "epochs": 5,
+  "n_pos": 253,
+  "n_neg": 5876,
+  "threshold_rule": "lowest t with val-carrier page FP <= 0.01 and dev benign FP <= 0.02",
+  "lodo_recall": 0.0356,
+  "lodo_recall_ci95": [
+   0.0188,
+   0.0662
+  ],
+  "val_page_fp": 0,
+  "val_pages": 38,
+  "default_on": false
+ },
+ "lodo_by_source": {
+  "agentdojo": {
+   "n": 44,
+   "lodo_recall": 0.0455,
+   "ci95": [
+    0.0126,
+    0.1514
+   ]
+  },
+  "bipia": {
+   "n": 125,
+   "lodo_recall": 0.0,
+   "ci95": [
+    0,
+    0.0298
+   ]
+  },
+  "injecagent": {
+   "n": 52,
+   "lodo_recall": 0.0385,
+   "ci95": [
+    0.0106,
+    0.1298
+   ]
+  },
+  "opi": {
+   "n": 30,
+   "lodo_recall": 0.1333,
+   "ci95": [
+    0.0531,
+    0.2968
+   ]
+  },
+  "pint": {
+   "n": 2,
+   "lodo_recall": 0.5,
+   "ci95": [
+    0.0945,
+    0.9055
+   ]
+  }
+ },
+ "threshold_table": [
+  {
+   "threshold": 0.1,
+   "val_page_fp": 17,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2292
+  },
+  {
+   "threshold": 0.105,
+   "val_page_fp": 17,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2213
+  },
+  {
+   "threshold": 0.11,
+   "val_page_fp": 17,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2213
+  },
+  {
+   "threshold": 0.115,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2174
+  },
+  {
+   "threshold": 0.12,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2174
+  },
+  {
+   "threshold": 0.125,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2174
+  },
+  {
+   "threshold": 0.13,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2095
+  },
+  {
+   "threshold": 0.135,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2095
+  },
+  {
+   "threshold": 0.14,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2095
+  },
+  {
+   "threshold": 0.145,
+   "val_page_fp": 16,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2055
+  },
+  {
+   "threshold": 0.15,
+   "val_page_fp": 15,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2055
+  },
+  {
+   "threshold": 0.155,
+   "val_page_fp": 15,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2055
+  },
+  {
+   "threshold": 0.16,
+   "val_page_fp": 15,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2016
+  },
+  {
+   "threshold": 0.165,
+   "val_page_fp": 15,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2016
+  },
+  {
+   "threshold": 0.17,
+   "val_page_fp": 14,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2016
+  },
+  {
+   "threshold": 0.175,
+   "val_page_fp": 14,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.2016
+  },
+  {
+   "threshold": 0.18,
+   "val_page_fp": 14,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1937
+  },
+  {
+   "threshold": 0.185,
+   "val_page_fp": 13,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1897
+  },
+  {
+   "threshold": 0.19,
+   "val_page_fp": 13,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1897
+  },
+  {
+   "threshold": 0.195,
+   "val_page_fp": 13,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1858
+  },
+  {
+   "threshold": 0.2,
+   "val_page_fp": 13,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1858
+  },
+  {
+   "threshold": 0.205,
+   "val_page_fp": 12,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.21,
+   "val_page_fp": 12,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.215,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.22,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.225,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.23,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.235,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.24,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1818
+  },
+  {
+   "threshold": 0.245,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1779
+  },
+  {
+   "threshold": 0.25,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1739
+  },
+  {
+   "threshold": 0.255,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1739
+  },
+  {
+   "threshold": 0.26,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.17
+  },
+  {
+   "threshold": 0.265,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.166
+  },
+  {
+   "threshold": 0.27,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1621
+  },
+  {
+   "threshold": 0.275,
+   "val_page_fp": 11,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1621
+  },
+  {
+   "threshold": 0.28,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1542
+  },
+  {
+   "threshold": 0.285,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1542
+  },
+  {
+   "threshold": 0.29,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1542
+  },
+  {
+   "threshold": 0.295,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1542
+  },
+  {
+   "threshold": 0.3,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1542
+  },
+  {
+   "threshold": 0.305,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.31,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.315,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.32,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.325,
+   "val_page_fp": 10,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.33,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.335,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1502
+  },
+  {
+   "threshold": 0.34,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1423
+  },
+  {
+   "threshold": 0.345,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1383
+  },
+  {
+   "threshold": 0.35,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1344
+  },
+  {
+   "threshold": 0.355,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1344
+  },
+  {
+   "threshold": 0.36,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1304
+  },
+  {
+   "threshold": 0.365,
+   "val_page_fp": 9,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1265
+  },
+  {
+   "threshold": 0.37,
+   "val_page_fp": 8,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1265
+  },
+  {
+   "threshold": 0.375,
+   "val_page_fp": 8,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1265
+  },
+  {
+   "threshold": 0.38,
+   "val_page_fp": 7,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1186
+  },
+  {
+   "threshold": 0.385,
+   "val_page_fp": 6,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1186
+  },
+  {
+   "threshold": 0.39,
+   "val_page_fp": 6,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1146
+  },
+  {
+   "threshold": 0.395,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.4,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.405,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.41,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.415,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.42,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.425,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.43,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.435,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.44,
+   "val_page_fp": 5,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1107
+  },
+  {
+   "threshold": 0.445,
+   "val_page_fp": 4,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1067
+  },
+  {
+   "threshold": 0.45,
+   "val_page_fp": 4,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1067
+  },
+  {
+   "threshold": 0.455,
+   "val_page_fp": 4,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1028
+  },
+  {
+   "threshold": 0.46,
+   "val_page_fp": 4,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.1028
+  },
+  {
+   "threshold": 0.465,
+   "val_page_fp": 4,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0988
+  },
+  {
+   "threshold": 0.47,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0909
+  },
+  {
+   "threshold": 0.475,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0909
+  },
+  {
+   "threshold": 0.48,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0909
+  },
+  {
+   "threshold": 0.485,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0909
+  },
+  {
+   "threshold": 0.49,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0909
+  },
+  {
+   "threshold": 0.495,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0909
+  },
+  {
+   "threshold": 0.5,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.087
+  },
+  {
+   "threshold": 0.505,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.087
+  },
+  {
+   "threshold": 0.51,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.087
+  },
+  {
+   "threshold": 0.515,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.087
+  },
+  {
+   "threshold": 0.52,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.083
+  },
+  {
+   "threshold": 0.525,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0791
+  },
+  {
+   "threshold": 0.53,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0791
+  },
+  {
+   "threshold": 0.535,
+   "val_page_fp": 3,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0791
+  },
+  {
+   "threshold": 0.54,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.545,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.55,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.555,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.56,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.565,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.57,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.575,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.58,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0751
+  },
+  {
+   "threshold": 0.585,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.59,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.595,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.6,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.605,
+   "val_page_fp": 2,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.61,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.615,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.62,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.625,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.63,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.635,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.64,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.645,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.65,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0711
+  },
+  {
+   "threshold": 0.655,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0672
+  },
+  {
+   "threshold": 0.66,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0593
+  },
+  {
+   "threshold": 0.665,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0593
+  },
+  {
+   "threshold": 0.67,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.675,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.68,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.685,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.69,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.695,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.7,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.705,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.71,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0553
+  },
+  {
+   "threshold": 0.715,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.72,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.725,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.73,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.735,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.74,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.745,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.75,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.755,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.76,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0514
+  },
+  {
+   "threshold": 0.765,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0474
+  },
+  {
+   "threshold": 0.77,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0474
+  },
+  {
+   "threshold": 0.775,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0474
+  },
+  {
+   "threshold": 0.78,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0474
+  },
+  {
+   "threshold": 0.785,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0435
+  },
+  {
+   "threshold": 0.79,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0435
+  },
+  {
+   "threshold": 0.795,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0435
+  },
+  {
+   "threshold": 0.8,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0435
+  },
+  {
+   "threshold": 0.805,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0395
+  },
+  {
+   "threshold": 0.81,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0395
+  },
+  {
+   "threshold": 0.815,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0395
+  },
+  {
+   "threshold": 0.82,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0395
+  },
+  {
+   "threshold": 0.825,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0395
+  },
+  {
+   "threshold": 0.83,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0395
+  },
+  {
+   "threshold": 0.835,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.84,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.845,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.85,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.855,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.86,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.865,
+   "val_page_fp": 1,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.87,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.875,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.88,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.885,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.89,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.895,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.9,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0356
+  },
+  {
+   "threshold": 0.905,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0316
+  },
+  {
+   "threshold": 0.91,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0277
+  },
+  {
+   "threshold": 0.915,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0277
+  },
+  {
+   "threshold": 0.92,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0277
+  },
+  {
+   "threshold": 0.925,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0277
+  },
+  {
+   "threshold": 0.93,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0277
+  },
+  {
+   "threshold": 0.935,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0237
+  },
+  {
+   "threshold": 0.94,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0158
+  },
+  {
+   "threshold": 0.945,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0158
+  },
+  {
+   "threshold": 0.95,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0158
+  },
+  {
+   "threshold": 0.955,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0119
+  },
+  {
+   "threshold": 0.96,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0119
+  },
+  {
+   "threshold": 0.965,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0079
+  },
+  {
+   "threshold": 0.97,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0079
+  },
+  {
+   "threshold": 0.975,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.004
+  },
+  {
+   "threshold": 0.98,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0
+  },
+  {
+   "threshold": 0.985,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0
+  },
+  {
+   "threshold": 0.99,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0
+  },
+  {
+   "threshold": 0.995,
+   "val_page_fp": 0,
+   "val_pages": 38,
+   "benign_fp": 0,
+   "benign_n": 985,
+   "lodo_recall": 0.0
+  }
+ ],
+ "elapsed_s": 761.9,
+ "size_bytes": 641100,
+ "nonzero_weights": 40000
+}

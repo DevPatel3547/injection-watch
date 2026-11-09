@@ -125,6 +125,35 @@ def _blocks(css: str):
         i = j
 
 
+_PSEUDO_CONTENT_RE = re.compile(
+    r"([^{}]*?::?(?:before|after|marker)\b[^{}]*)\{([^{}]*?\bcontent\s*:\s*([^;}]+))", re.I)
+_CSS_STR_RE = re.compile(r'"((?:[^"\\\n]|\\.)*)"|\'((?:[^\'\\\n]|\\.)*)\'', re.S)
+_CSS_ESC_RE = re.compile(r"\\([0-9a-fA-F]{1,6})\s?|\\(.)", re.S)
+
+
+def _css_unescape(s: str) -> str:
+    def sub(m: re.Match[str]) -> str:
+        if m.group(1):
+            cp = int(m.group(1), 16)
+            return chr(cp) if 0 < cp <= 0x10FFFF else "\ufffd"
+        return "" if m.group(2) == "\n" else m.group(2)
+    return _CSS_ESC_RE.sub(sub, s)
+
+
+def pseudo_content_strings(css: str, min_chars: int = 12) -> list[tuple[str, str]]:
+    """(selector, text) for every ``::before``/``::after``/``::marker`` rule whose ``content`` holds string
+    literals of >= ``min_chars`` characters. Such text is rendered by CSS but absent from the DOM, so agents that
+    read HTML or the DOM never see it while a human may (or may not, if the element is hidden)."""
+    out: list[tuple[str, str]] = []
+    css = _COMMENT_RE.sub("", css[:MAX_CSS_BYTES])
+    for m in _PSEUDO_CONTENT_RE.finditer(css):
+        parts = [_css_unescape(a if a is not None and a != "" else b) for a, b in _CSS_STR_RE.findall(m.group(3))]
+        text = "".join(parts).strip()
+        if len(text) >= min_chars:
+            out.append((m.group(1).strip()[:120], text))
+    return out
+
+
 def parse_css(css: str, start_order: int = 0) -> list[CssRule]:
     css = _COMMENT_RE.sub("", css[:MAX_CSS_BYTES])
     rules: list[CssRule] = []

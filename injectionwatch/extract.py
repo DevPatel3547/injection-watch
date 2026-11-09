@@ -14,7 +14,13 @@ reading raw HTML / the DOM / the accessibility tree might:
   non_rendered  <noscript>, <template>
   invisible_unicode  Unicode tag-character runs (decoded)
   http_header   non-standard response headers
+  script        prose-like string literals (>= 40 chars, >= 6 words) inside inline <script> code (v0.4)
+  css_content   CSS ``content:`` strings on ::before/::after/::marker (text that is not in the DOM) (v0.4)
+  svg           <svg> <title>/<desc> text (v0.4)
   visible       ordinary visible text blocks (scored with a lower factor)
+
+``<iframe srcdoc>`` documents are extracted recursively (v0.4); when the iframe itself is hidden, every candidate
+of the inner document is reported as ``hidden_css`` with the ``iframe_srcdoc`` technique.
 
 This is a static approximation. External stylesheets are applied only when the caller
 passes a ``css_resolver`` (the static pass never fetches anything itself); JS-driven hiding
@@ -29,7 +35,7 @@ from dataclasses import dataclass, field
 from bs4 import BeautifulSoup, Comment, Doctype, NavigableString, Tag
 from bs4.element import CData, Declaration, ProcessingInstruction
 
-from .css import CssResolver, StyleIndex, attr_str, build_index, collect_css, parse_decls
+from .css import CssResolver, StyleIndex, attr_str, build_index, collect_css, parse_decls, pseudo_content_strings
 from .textutil import clean_for_scoring, find_unicode_tag_runs, has_zero_width_obfuscation
 
 __all__ = ["Candidate", "extract_candidates", "hidden_reason", "parse_color", "parse_decls", "visible_text"]
@@ -195,8 +201,60 @@ def _color_dist(a: RGB, b: RGB) -> float:
 
 # ---------------------------------------------------------------- main extractor
 
+MAX_SRCDOC_DEPTH = 2
+SCRIPT_STR_MIN_CHARS = 40
+SCRIPT_STR_MIN_WORDS = 6
+_JS_STR_RE = re.compile(r'"((?:[^"\\\n]|\\.){40,4000})"|\'((?:[^\'\\\n]|\\.){40,4000})\'|`((?:[^`\\]|\\.){40,4000})`',
+                        re.S)
+_JS_ESC_RE = re.compile(r"\\(u\{[0-9a-fA-F]{1,6}\}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|.)", re.S)
+_WORD_RE = re.compile(r"[^\W\d_]{2,}")
+_JS_TYPES = ("", "text/javascript", "application/javascript", "module", "text/ecmascript", "application/json")
+
+
+def _js_unescape(s: str) -> str:
+    def sub(m: re.Match[str]) -> str:
+        e = m.group(1)
+        if e[0] == "u" and len(e) > 1:
+            h = e[2:-1] if e[1] == "{" else e[1:]
+            try:
+                return chr(int(h, 16))
+            except ValueError:
+                return e
+        if e[0] == "x" and len(e) == 3:
+            return chr(int(e[1:], 16))
+        return {"n": "\n", "t": "\t", "r": "", "0": ""}.get(e, e)
+    return _JS_ESC_RE.sub(sub, s)
+
+
+def looks_like_prose(s: str) -> bool:
+    """Conservative: >= 6 words of letters, mostly letters and spaces, few code / markup / URL characters."""
+    t = s.strip()
+    if len(t) < SCRIPT_STR_MIN_CHARS or t.startswith(("http://", "https://", "data:", "//", "<")):
+        return False
+    words = _WORD_RE.findall(t)
+    if len(words) < SCRIPT_STR_MIN_WORDS:
+        return False
+    letters = sum(ch.isalpha() or ch.isspace() for ch in t)
+    code = sum(ch in "{}[]()<>=;|\\$#" for ch in t)
+    return letters / len(t) >= 0.75 and code / len(t) <= 0.02 and " " in t
+
+
+MAX_SCRIPT_SCAN = 400_000
+
+
+def script_strings(code: str) -> list[str]:
+    out = []
+    for m in _JS_STR_RE.finditer(code[:MAX_SCRIPT_SCAN]):
+        raw = next(g for g in m.groups() if g is not None)
+        s = _js_unescape(raw)
+        if looks_like_prose(s):
+            out.append(s)
+    return out
+
+
 def extract_candidates(html: str, headers: dict[str, str] | None = None,
-                       css_resolver: CssResolver | None = None, base_url: str = "") -> list[Candidate]:
+                       css_resolver: CssResolver | None = None, base_url: str = "",
+                       _depth: int = 0) -> list[Candidate]:
     """Extract every machine-readable-but-not-human-visible text candidate from ``html``.
 
     ``css_resolver(url) -> css_text | None`` lets callers supply external stylesheets (for example
@@ -204,7 +262,8 @@ def extract_candidates(html: str, headers: dict[str, str] | None = None,
     """
     soup = BeautifulSoup(html, "lxml")
     cands: list[Candidate] = []
-    styles = build_index(soup, collect_css(soup, css_resolver, base_url))
+    sheets = collect_css(soup, css_resolver, base_url)
+    styles = build_index(soup, sheets)
 
     # 1. Comments (anywhere in the doc)
     for com in soup.find_all(string=lambda s: isinstance(s, Comment)):
@@ -218,8 +277,9 @@ def extract_candidates(html: str, headers: dict[str, str] | None = None,
                or attr_str(m, "itemprop") or "?")
         if content and clean_for_scoring(content):
             cands.append(Candidate(content, "meta", [f"meta[{key.lower()}]"], f"meta[{key}]"))
-    if soup.title and soup.title.string:
-        cands.append(Candidate(str(soup.title.string), "meta", ["title"], "title"))
+    page_title = next((t for t in soup.find_all("title") if t.find_parent("svg") is None), None)
+    if page_title is not None and page_title.string:
+        cands.append(Candidate(str(page_title.string), "meta", ["title"], "title"))
 
     # 3. JSON-LD
     for sc in soup.find_all("script", attrs={"type": re.compile("ld\\+json", re.I)}):
@@ -257,6 +317,39 @@ def extract_candidates(html: str, headers: dict[str, str] | None = None,
     for decoded in find_unicode_tag_runs(html):
         if decoded.strip():
             cands.append(Candidate(decoded, "invisible_unicode", ["unicode_tags"], "U+E00xx"))
+
+    # 6b. (v0.4) Machine-only text that the walk above never sees
+    for sc in soup.find_all("script"):
+        stype = attr_str(sc, "type").lower().split(";")[0].strip()
+        if stype not in _JS_TYPES or attr_str(sc, "src"):
+            continue
+        for s in script_strings(sc.string or sc.get_text() or ""):
+            cands.append(Candidate(s, "script", ["script_string"], _el_path(sc)))
+    for sheet in sheets:
+        for sel, text in pseudo_content_strings(sheet):
+            cands.append(Candidate(text, "css_content", ["css_pseudo_content"], sel))
+    for svg in soup.find_all("svg"):
+        for el in svg.find_all(["title", "desc"]):
+            t = el.get_text(" ", strip=True)
+            if len(t) >= 12:
+                cands.append(Candidate(t, "svg", [f"svg_{el.name}"], f"svg>{el.name}"))
+    if _depth < MAX_SRCDOC_DEPTH:
+        for fr in soup.find_all("iframe"):
+            doc = fr.get("srcdoc")
+            if not isinstance(doc, str) or not doc.strip():
+                continue
+            hidden = hidden_reason(styles.computed(fr)) or (fr.has_attr("hidden") and "hidden_attr") or None
+            if not hidden:
+                for anc in fr.parents:
+                    if isinstance(anc, Tag) and (hidden_reason(styles.computed(anc)) or anc.has_attr("hidden")):
+                        hidden = "hidden_ancestor"
+                        break
+            for c in extract_candidates(doc, None, None, "", _depth + 1):
+                techs = [*c.techniques, "iframe_srcdoc"]
+                if hidden and c.location == "visible":
+                    cands.append(Candidate(c.text, "hidden_css", [hidden, *techs], f"iframe>{c.path}", c.in_code))
+                else:
+                    cands.append(Candidate(c.text, c.location, techs, f"iframe>{c.path}", c.in_code))
 
     # 7. HTTP headers
     for k, v in (headers or {}).items():
