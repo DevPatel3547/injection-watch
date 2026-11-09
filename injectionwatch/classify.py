@@ -303,15 +303,27 @@ class _LiveClassifier:
 
 # --------------------------------------------------------------------------- Anthropic
 
-# Models that reject forced tool use (tool_choice any/tool) with HTTP 400 whatever the thinking settings
-# (Anthropic tool-use docs, checked 2026-11). For these we send tool_choice=auto plus an instruction.
-NO_FORCED_TOOL_RE = re.compile(r"claude-(?:opus|sonnet|fable|mythos)-5", re.I)
+# How the classifier asks for its answer. "tool" (default) forces the record_classification tool; "auto" lets
+# the model choose and adds an instruction to call the tool (a JSON text answer is also accepted). Override with
+# INJECTIONWATCH_TOOL_CHOICE or AnthropicClassifier(tool_choice=...). If the API answers a forced request with a
+# 400 that names tool_choice, the classifier switches itself to "auto" once and records that in its stats.
+TOOL_CHOICES = ("tool", "auto")
 
 
-def tool_choice_for(model: str) -> dict[str, Any]:
-    if NO_FORCED_TOOL_RE.search(model):
-        return {"type": "auto"}
-    return {"type": "tool", "name": _TOOL["name"]}
+def tool_choice_param(mode: str) -> dict[str, Any]:
+    if mode not in TOOL_CHOICES:
+        raise ValueError(f"tool_choice must be one of {', '.join(TOOL_CHOICES)} (got {mode!r})")
+    return {"type": "tool", "name": _TOOL["name"]} if mode == "tool" else {"type": "auto"}
+
+
+def _rejects_forced_tool(e: Exception) -> bool:
+    """A 400 invalid_request_error whose message is about tool_choice (whatever the model or reason)."""
+    if getattr(e, "status_code", None) != 400:
+        return False
+    body = getattr(e, "body", None)
+    err = body.get("error", body) if isinstance(body, dict) else None
+    msg = str(err.get("message", "")) if isinstance(err, dict) else str(e)
+    return "tool_choice" in msg
 
 
 class AnthropicClassifier(_LiveClassifier):
@@ -328,13 +340,16 @@ class AnthropicClassifier(_LiveClassifier):
                  fallback: Classifier | None = None, *, max_retries: int = 3, timeout: float = 60.0,
                  request_timeout: float = 30.0, max_retry_after: float = 30.0, breaker_after: int = 5,
                  stream: bool = False, base_url: str | None = None, api_key: str | None = None,
-                 sleep: Callable[[float], None] | None = None):
+                 sleep: Callable[[float], None] | None = None, tool_choice: str | None = None):
         super().__init__(fallback=fallback, max_retries=max_retries, timeout=timeout,
                          request_timeout=request_timeout, max_retry_after=max_retry_after,
                          breaker_after=breaker_after, sleep=sleep)
         self.model = model
         self.max_chars = max_chars
         self.stream = stream
+        self.tool_choice = tool_choice or os.environ.get("INJECTIONWATCH_TOOL_CHOICE", "tool")
+        tool_choice_param(self.tool_choice)  # validate early: a typo is a usage error, not a silent fallback
+        self.tool_choice_note = ""
         if client is None:
             try:
                 import anthropic  # optional dependency
@@ -354,22 +369,36 @@ class AnthropicClassifier(_LiveClassifier):
         return [{"role": "user", "content": _user_body(text, location, score, self.max_chars)}]
 
     def request_kwargs(self, text: str, location: str, score: ScoreResult) -> dict[str, Any]:
-        choice = tool_choice_for(self.model)
+        choice = tool_choice_param(self.tool_choice)
         system = _SYSTEM if choice["type"] == "tool" else _SYSTEM + " Call record_classification exactly once."
         return {"model": self.model, "max_tokens": 300 if choice["type"] == "tool" else 1024, "system": system,
                 "tools": [_TOOL], "tool_choice": choice, "messages": self.build_messages(text, location, score)}
 
+    def _send(self, kw: dict[str, Any], timeout: float) -> Any:
+        if self.stream:
+            with self.client.messages.stream(**kw, timeout=timeout) as s:
+                return s.get_final_message()
+        return self.client.messages.create(**kw, timeout=timeout)
+
     def _attempt(self, text: str, location: str, score: ScoreResult, timeout: float) -> Classification:
-        # No sampling parameters: current SDKs/models reject `temperature` (SDK 2.x has no such argument).
+        # No sampling parameters: anthropic SDK 2.x `messages.create` has no `temperature` argument, and passing
+        # one raises TypeError before any request is sent (tests/test_live_anthropic.py pins this).
         kw = self.request_kwargs(text, location, score)
         try:
-            if self.stream:
-                with self.client.messages.stream(**kw, timeout=timeout) as s:
-                    resp = s.get_final_message()
-            else:
-                resp = self.client.messages.create(**kw, timeout=timeout)
+            resp = self._send(kw, timeout)
         except Exception as e:
-            raise _anthropic_error(e) from None
+            if self.tool_choice == "tool" and _rejects_forced_tool(e):
+                with self._lock:
+                    self.tool_choice = "auto"
+                    self.tool_choice_note = f"API rejected forced tool_choice for {self.model}; switched to auto"
+                log.warning("forced tool_choice rejected; using auto", extra={"model": self.model})
+                kw = self.request_kwargs(text, location, score)
+                try:
+                    resp = self._send(kw, timeout)
+                except Exception as e2:
+                    raise _anthropic_error(e2) from None
+            else:
+                raise _anthropic_error(e) from None
         usage = getattr(resp, "usage", None)
         if usage is not None:
             with self._lock:

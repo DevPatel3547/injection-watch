@@ -21,8 +21,6 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-# Models that reject forced tool use (tool_choice any/tool) with a 400, per the tool-use docs.
-NO_FORCED_TOOL_RE = re.compile(r"claude-(opus|sonnet|fable|mythos)-5", re.I)
 ERROR_TYPES = {400: "invalid_request_error", 401: "authentication_error", 403: "permission_error",
                404: "not_found_error", 413: "request_too_large", 429: "rate_limit_error", 500: "api_error",
                504: "timeout_error", 529: "overloaded_error"}
@@ -48,6 +46,9 @@ def toy_classify(snippet: str) -> dict[str, Any]:
 class FakeAnthropic:
     def __init__(self, host: str = "127.0.0.1", port: int = 0, valid_keys: tuple[str, ...] | None = None):
         self.script: list[Any] = []          # consumed one per POST /v1/messages; then "ok"
+        # Opt-in: answer forced tool_choice (any/tool) with a 400 invalid_request_error that names tool_choice,
+        # to exercise the classifier's switch to auto. Not a claim about which real models do this.
+        self.reject_forced_tool = False
         self.requests: list[dict[str, Any]] = []
         self.valid_keys = valid_keys          # None: any non-empty key is accepted
         self.lock = threading.Lock()
@@ -155,8 +156,8 @@ class FakeAnthropic:
                     if not isinstance(t.get("input_schema"), dict):
                         return "tools.0.input_schema: Field required"
                 tc = b.get("tool_choice") or {}
-                if tc.get("type") in ("any", "tool") and NO_FORCED_TOOL_RE.search(str(b["model"])):
-                    return f"tool_choice: forced tool use is not supported for {b['model']}; use auto"
+                if tc.get("type") in ("any", "tool") and fake.reject_forced_tool:
+                    return f"tool_choice: forced tool use is not supported for {b['model']}"
                 if tc.get("type") == "tool" and tc.get("name") not in tools:
                     return "tool_choice.name: tool not found"
                 return None

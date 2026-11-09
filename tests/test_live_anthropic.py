@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from injectionwatch.classify import AnthropicClassifier, OpenAICompatClassifier, parse_retry_after, tool_choice_for
+from injectionwatch.classify import AnthropicClassifier, OpenAICompatClassifier, parse_retry_after
 from injectionwatch.detector import scan_html
 from injectionwatch.scorer import score_text
 
@@ -126,23 +126,56 @@ def test_400_is_not_retried(fake):
     assert len(fake.requests) == 1 and "http_400 invalid_request_error" in c.extra["llm_error"]
 
 
-def test_models_that_reject_forced_tool_use_get_auto(fake):
-    assert tool_choice_for("claude-haiku-5-5")["type"] == "tool"
+def test_forced_tool_choice_is_the_default_for_every_model(fake):
+    for model in ("claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"):
+        c = _clf(model=model).classify(TEXT, "hidden_css", score_text(TEXT))
+        assert c.source == f"anthropic:{model}", c.extra
+    assert all(r["body"]["tool_choice"] == {"type": "tool", "name": "record_classification"} for r in fake.requests)
+
+
+def test_api_rejecting_forced_tool_choice_switches_to_auto_once(fake):
+    fake.reject_forced_tool = True
     clf = _clf(model="claude-sonnet-5-5")
     c = clf.classify(TEXT, "hidden_css", score_text(TEXT))
-    assert "llm_error" not in c.source, c.extra
-    assert fake.requests[0]["body"]["tool_choice"] == {"type": "auto"}
-    assert "temperature" not in fake.requests[0]["body"]
-    # and the fake really enforces the rule: a forced choice for that model is a 400
-    from injectionwatch import classify
+    assert c.source == "anthropic:claude-sonnet-5-5", c.extra
+    assert [r["body"]["tool_choice"]["type"] for r in fake.requests] == ["tool", "auto"]
+    assert clf.tool_choice == "auto" and "switched to auto" in clf.tool_choice_note
+    assert "Call record_classification" in fake.requests[1]["body"]["system"]
+    clf.classify(TEXT, "comment", score_text(TEXT))          # remembered: no second forced attempt
+    assert [r["body"]["tool_choice"]["type"] for r in fake.requests] == ["tool", "auto", "auto"]
 
-    orig = classify.tool_choice_for
-    try:
-        classify.tool_choice_for = lambda m: {"type": "tool", "name": "record_classification"}
-        bad = _clf(model="claude-opus-5-5").classify(TEXT, "hidden_css", score_text(TEXT))
-    finally:
-        classify.tool_choice_for = orig
-    assert "http_400" in bad.extra["llm_error"]
+
+def test_other_400s_do_not_switch_tool_choice(fake):
+    fake.script = [{"status": 400, "message": "max_tokens: too large"}]
+    clf = _clf()
+    c = clf.classify(TEXT, "hidden_css", score_text(TEXT))
+    assert len(fake.requests) == 1 and clf.tool_choice == "tool" and "http_400" in c.extra["llm_error"]
+
+
+def test_tool_choice_env_override_and_validation(fake, monkeypatch):
+    monkeypatch.setenv("INJECTIONWATCH_TOOL_CHOICE", "auto")
+    _clf().classify(TEXT, "hidden_css", score_text(TEXT))
+    assert fake.requests[-1]["body"]["tool_choice"] == {"type": "auto"}
+    with pytest.raises(ValueError, match="tool_choice must be one of"):
+        _clf(tool_choice="any-tool")
+
+
+def test_request_kwargs_bind_to_the_installed_sdk(fake):
+    """Regression: v0.3 passed temperature=0, which anthropic SDK 2.x rejects with TypeError before sending,
+    so every live call silently fell back to the heuristic classifier. Bind the exact kwargs we send to the
+    installed SDK's signature, for both tool_choice modes."""
+    import inspect
+
+    from anthropic.resources.messages import Messages
+
+    sig = inspect.signature(Messages.create)
+    for mode in ("tool", "auto"):
+        kw = _clf(tool_choice=mode).request_kwargs(TEXT, "hidden_css", score_text(TEXT))
+        assert "temperature" not in kw
+        sig.bind(None, **kw, timeout=5.0)                     # raises TypeError on an unknown argument
+    if "temperature" not in sig.parameters:                   # SDK 2.x: the old call really was broken
+        with pytest.raises(TypeError):
+            sig.bind(None, **kw, temperature=0, timeout=5.0)
 
 
 def test_mid_stream_overloaded_error_event_is_retried(fake):
