@@ -2,6 +2,21 @@
  "schema": "iwbench/1",
  "runs": [
   {
+   "file": "v0.3_baseline_rendered.json",
+   "version": "0.3.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.3.0",
+    "ml": false,
+    "mode": "rendered"
+   },
+   "generated_at": "2026-11-06T04:37:23Z",
+   "recall": 0.1366,
+   "fp_rate": 0.0,
+   "quick": false
+  },
+  {
    "file": "v0.3_baseline_static.json",
    "version": "0.3.0",
    "split": "test",
