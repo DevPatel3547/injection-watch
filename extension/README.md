@@ -8,12 +8,16 @@ TypeScript scorer matches the Python scorer exactly on every fixture candidate
 
 ## Build, check, package
 
+Needs Node 18+ (macOS: `brew install node`). TypeScript is a pinned devDependency, so no global `tsc`
+and no `sudo npm install -g` are needed.
+
 ```
-python3 scripts/make_icons.py          # once; writes extension/icons/*.png (no dependencies)
 cd extension
+npm ci                                 # installs the pinned TypeScript from package-lock.json
 npm run build                          # tsc (strict) -> dist/, copies assets, runs check-dist.mjs
 npm run package                        # zip of dist/ for the Chrome Web Store
 ```
+The icons are committed; `python3 scripts/make_icons.py` regenerates them.
 `check-dist.mjs` fails the build if any of these hold:
 
 * a manifest reference is missing

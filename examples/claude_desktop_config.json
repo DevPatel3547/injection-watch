@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "injectionwatch": {
+      "command": "injectionwatch-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

@@ -38,5 +38,12 @@ for (const f of readdirSync("dist").filter((f) => f.endsWith(".js") || f.endsWit
   if (/<script(?![^>]*\bsrc=)[^>]*>/i.test(src)) problems.push(`${f}: inline script (blocked by MV3 CSP)`);
   if (/\.innerHTML\s*=/.test(src)) problems.push(`${f}: innerHTML assignment`);
 }
+// Shared with the public site (X-ray playground): these must not touch extension APIs.
+for (const f of ["rules.js", "hidden_text.js", "scorer.js", "collect.js"]) {
+  need(f, "shared with the site");
+  if (existsSync("dist/" + f) && /\bchrome\s*\./.test(readFileSync("dist/" + f, "utf8"))) problems.push(`${f}: uses chrome.* (must stay page-safe)`);
+}
+const order = (m.content_scripts[0] || {}).js || [];
+if (order.indexOf("collect.js") < 0 || order.indexOf("collect.js") > order.indexOf("content.js")) problems.push("collect.js must load before content.js");
 if (problems.length) { console.error("dist check FAILED:\n - " + problems.join("\n - ")); process.exit(1); }
 console.log("dist check OK: " + readdirSync("dist").length + " entries, MV3, no remote code");
