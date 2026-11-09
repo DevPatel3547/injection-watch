@@ -1,5 +1,5 @@
 // Service worker: badge + opt-in reporting. Keeps findings in memory only.
-const IW_VERSION = "0.3.0";
+const IW_VERSION = "0.4.0";
 const IW_FLAG_INTENTS = new Set(["malicious", "manipulative"]);
 const iwTabFindings = new Map<number, IwFinding[]>();
 

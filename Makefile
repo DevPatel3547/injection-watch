@@ -2,7 +2,7 @@ PY ?= python3
 DB ?= injectionwatch.db
 SITE ?= _site
 
-.PHONY: help install lint fmt typecheck test cov check eval eval-full fixtures ext ext-package \
+.PHONY: help doctor demo-live demo-live-fake install lint fmt typecheck test cov check eval eval-full fixtures ext ext-package \
         demo warc-demo publish crawl-sample report serve mcp docker-build docker-run clean
 
 help:  ## list targets
@@ -38,8 +38,8 @@ fixtures:  ## regenerate dev fixture corpora (never touches the frozen held-out 
 	$(PY) scripts/make_fixtures.py
 	$(PY) scripts/make_dev_fixtures.py
 
-ext:  ## build the MV3 extension into extension/dist
-	cd extension && npm run build
+ext:  ## build the MV3 extension into extension/dist (TypeScript is a pinned devDependency)
+	cd extension && npm ci && npm run build
 
 ext-package: ext  ## zip extension/dist for the Chrome Web Store
 	cd extension && npm run package
@@ -72,5 +72,14 @@ docker-build:
 docker-run:
 	docker run --rm -p 8000:8000 -v $(PWD)/data-volume:/data injectionwatch:local
 
+doctor:  ## check this machine: Python, extras, Chromium, Node, API key present (never printed)
+	$(PY) -m injectionwatch doctor
+
+demo-live:  ## real Claude on 8 fixtures (needs ANTHROPIC_API_KEY; asks before spending)
+	$(PY) scripts/demo_live.py
+
+demo-live-fake:  ## rehearsal of demo-live against the local fake Messages API (no key, no network)
+	$(PY) scripts/demo_live.py --fake
+
 clean:
-	rm -rf extension/dist extension/*.zip demo.db warc-demo.db .pytest_cache .mypy_cache .ruff_cache .coverage coverage.xml $(SITE)
+	rm -rf build/ extension/dist extension/*.zip demo.db warc-demo.db .pytest_cache .mypy_cache .ruff_cache .coverage coverage.xml $(SITE)

@@ -99,6 +99,35 @@ jobs:
       - name: Tests
         run: python -m pytest -q
 
+  action:
+    # Self-test of the composite GitHub Action (action.yml) on the dev fixtures.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan fixtures (never fail)
+        id: scan
+        uses: ./
+        with:
+          path: fixtures_dev
+          fail-on: never
+      - name: Check outputs
+        shell: bash
+        run: |
+          test -s injectionwatch.sarif
+          test "${{ steps.scan.outputs.flagged }}" -ge 20
+          echo "flagged=${{ steps.scan.outputs.flagged }} files=${{ steps.scan.outputs.files-scanned }}"
+      - name: Scan fixtures (fail on flagged)
+        id: strict
+        continue-on-error: true
+        uses: ./
+        with:
+          path: fixtures_dev
+          fail-on: flagged
+          sarif-file: strict.sarif
+      - name: Strict scan must have failed
+        shell: bash
+        run: test "${{ steps.strict.outcome }}" = "failure"
+
   docker:
     runs-on: ubuntu-latest
     steps:

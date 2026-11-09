@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: Patel
     given-names: Dev
-version: 0.3.0
-date-released: 2026-10-12
+version: 0.4.0
+date-released: 2026-11-08
 license: Apache-2.0
 repository-code: "https://github.com/DevPatel3547/injection-watch"
 keywords:

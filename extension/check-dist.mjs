@@ -47,3 +47,14 @@ const order = (m.content_scripts[0] || {}).js || [];
 if (order.indexOf("collect.js") < 0 || order.indexOf("collect.js") > order.indexOf("content.js")) problems.push("collect.js must load before content.js");
 if (problems.length) { console.error("dist check FAILED:\n - " + problems.join("\n - ")); process.exit(1); }
 console.log("dist check OK: " + readdirSync("dist").length + " entries, MV3, no remote code");
+
+// The version reported in extension submissions must match the manifest.
+{
+  const manifestVersion = JSON.parse(readFileSync("manifest.json", "utf8")).version;
+  const bg = readFileSync("src/background.ts", "utf8");
+  const m = /const IW_VERSION = "([^"]+)"/.exec(bg);
+  if (!m || m[1] !== manifestVersion) {
+    console.error(`background.ts IW_VERSION (${m ? m[1] : "missing"}) != manifest version ${manifestVersion}`);
+    process.exit(1);
+  }
+}
