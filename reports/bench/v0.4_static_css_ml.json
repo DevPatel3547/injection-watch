@@ -1,0 +1,1117 @@
+{
+ "schema": "iwbench/1",
+ "version": "0.4.0",
+ "generated_at": "2026-11-09T02:52:13Z",
+ "detector": {
+  "name": "injectionwatch",
+  "rules_version": "0.4.0",
+  "ml": true,
+  "mode": "static_css"
+ },
+ "split": "test",
+ "config": {
+  "quick": false,
+  "per_payload": 3,
+  "per_benign": 2,
+  "seed": "iwbench-v1",
+  "elapsed_s": 56.7
+ },
+ "synthetic_planting": true,
+ "sources": [
+  {
+   "id": "injecagent",
+   "repo": "uiuc-kang-lab/InjecAgent",
+   "commit": "f19c9f2c79a41046eb13c03c51a24c567a8ffa07",
+   "license": "MIT",
+   "n": 216,
+   "role": "payload"
+  },
+  {
+   "id": "bipia",
+   "repo": "microsoft/BIPIA",
+   "commit": "a004b69ec0dd446e0afd461d98cb5e96e120a5d0",
+   "license": "MIT",
+   "n": 555,
+   "role": "mixed"
+  },
+  {
+   "id": "agentdojo",
+   "repo": "ethz-spylab/agentdojo",
+   "commit": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+   "license": "MIT",
+   "n": 192,
+   "role": "payload"
+  },
+  {
+   "id": "opi",
+   "repo": "liu00222/Open-Prompt-Injection",
+   "commit": "fbed5cca347488f88363790ae3ae97c56116da6a",
+   "license": "MIT",
+   "n": 45,
+   "role": "payload"
+  },
+  {
+   "id": "greshake",
+   "repo": "greshake/llm-security",
+   "commit": "c312325bee5f16d8f6524bd6f41e1510c5623a1e",
+   "license": "MIT",
+   "n": 3,
+   "role": "payload"
+  },
+  {
+   "id": "pint",
+   "repo": "lakeraai/pint-benchmark",
+   "commit": "0efab3f463eae9c823130d8faffb71b2e7c06e63",
+   "license": "MIT",
+   "n": 6,
+   "role": "mixed"
+  },
+  {
+   "id": "owasp_llm",
+   "repo": "OWASP/www-project-top-10-for-large-language-model-applications",
+   "commit": "99f4395589bdbd120ae961f9cd179e79d7f9b27f",
+   "license": "CC-BY-SA-4.0",
+   "n": 14,
+   "role": "negative"
+  },
+  {
+   "id": "scrapinghub",
+   "repo": "scrapinghub/article-extraction-benchmark",
+   "commit": "4a3bc979f76c0df73cb95fe272e2fc1b96f9f010",
+   "license": "MIT",
+   "n": 174,
+   "role": "carrier"
+  }
+ ],
+ "carriers": {
+  "n": 174,
+  "sources": [
+   "scrapinghub"
+  ]
+ },
+ "counts": {
+  "pages": 1261,
+  "positive_hidden": 798,
+  "positive_visible": 33,
+  "benign_planted": 242,
+  "carriers_unmodified": 174,
+  "discussion_pages": 14
+ },
+ "overall": {
+  "tp": 469,
+  "fn": 329,
+  "fp": 0,
+  "tn": 174,
+  "recall": 0.5877,
+  "recall_ci": [
+   0.5532,
+   0.6214
+  ],
+  "fp_rate": 0.0,
+  "fp_ci": [
+   0.0,
+   0.0216
+  ],
+  "extracted_hidden": 0.9737,
+  "located": 0.5877
+ },
+ "hidden_covered_techniques": {
+  "tp": 404,
+  "fn": 235,
+  "fp": 0,
+  "tn": 0,
+  "recall": 0.6322,
+  "recall_ci": [
+   0.5942,
+   0.6687
+  ],
+  "fp_rate": null,
+  "fp_ci": null,
+  "extracted_hidden": 1.0,
+  "located": 0.6322
+ },
+ "hidden_static_blind_techniques": {
+  "tp": 65,
+  "fn": 94,
+  "fp": 0,
+  "tn": 0,
+  "recall": 0.4088,
+  "recall_ci": [
+   0.3354,
+   0.4865
+  ],
+  "fp_rate": null,
+  "fp_ci": null,
+  "extracted_hidden": 0.8679,
+  "located": 0.4088
+ },
+ "visible_control": {
+  "tp": 6,
+  "fn": 27,
+  "fp": 0,
+  "tn": 0,
+  "recall": 0.1818,
+  "recall_ci": [
+   0.0861,
+   0.3439
+  ],
+  "fp_rate": null,
+  "fp_ci": null,
+  "extracted_hidden": 0.0303,
+  "located": 0.1818
+ },
+ "benign_hidden_text": {
+  "tp": 0,
+  "fn": 0,
+  "fp": 0,
+  "tn": 231,
+  "recall": null,
+  "recall_ci": null,
+  "fp_rate": 0.0,
+  "fp_ci": [
+   0.0,
+   0.0164
+  ]
+ },
+ "discussion_pages": {
+  "tp": 0,
+  "fn": 0,
+  "fp": 0,
+  "tn": 14,
+  "recall": null,
+  "recall_ci": null,
+  "fp_rate": 0.0,
+  "fp_ci": [
+   0.0,
+   0.2153
+  ]
+ },
+ "by_technique": {
+  "aria_label": {
+   "tp": 14,
+   "fn": 16,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.4667,
+   "recall_ci": [
+    0.3023,
+    0.6386
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.4667
+  },
+  "clip_sr_only": {
+   "tp": 20,
+   "fn": 14,
+   "fp": 0,
+   "tn": 10,
+   "recall": 0.5882,
+   "recall_ci": [
+    0.4222,
+    0.7363
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2775
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5882
+  },
+  "color_match": {
+   "tp": 18,
+   "fn": 16,
+   "fp": 0,
+   "tn": 9,
+   "recall": 0.5294,
+   "recall_ci": [
+    0.3674,
+    0.6855
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2992
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5294
+  },
+  "css_content": {
+   "tp": 18,
+   "fn": 14,
+   "fp": 0,
+   "tn": 10,
+   "recall": 0.5625,
+   "recall_ci": [
+    0.3933,
+    0.7183
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2775
+   ],
+   "extracted_hidden": 0.9375,
+   "located": 0.5625
+  },
+  "data_attribute": {
+   "tp": 16,
+   "fn": 14,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.5333,
+   "recall_ci": [
+    0.3614,
+    0.6977
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5333
+  },
+  "display_none": {
+   "tp": 21,
+   "fn": 10,
+   "fp": 0,
+   "tn": 10,
+   "recall": 0.6774,
+   "recall_ci": [
+    0.5014,
+    0.8143
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2775
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6774
+  },
+  "external_css": {
+   "tp": 26,
+   "fn": 6,
+   "fp": 0,
+   "tn": 9,
+   "recall": 0.8125,
+   "recall_ci": [
+    0.6469,
+    0.9111
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2992
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.8125
+  },
+  "hidden_attr": {
+   "tp": 19,
+   "fn": 15,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.5588,
+   "recall_ci": [
+    0.3945,
+    0.7112
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5588
+  },
+  "hidden_input": {
+   "tp": 21,
+   "fn": 13,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.6176,
+   "recall_ci": [
+    0.4504,
+    0.761
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6176
+  },
+  "html_comment": {
+   "tp": 20,
+   "fn": 11,
+   "fp": 0,
+   "tn": 11,
+   "recall": 0.6452,
+   "recall_ci": [
+    0.4695,
+    0.7888
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2588
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6452
+  },
+  "iframe_srcdoc": {
+   "tp": 22,
+   "fn": 10,
+   "fp": 0,
+   "tn": 11,
+   "recall": 0.6875,
+   "recall_ci": [
+    0.5143,
+    0.8205
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2588
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6875
+  },
+  "img_alt": {
+   "tp": 18,
+   "fn": 14,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.5625,
+   "recall_ci": [
+    0.3933,
+    0.7183
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5625
+  },
+  "js_inserted": {
+   "tp": 0,
+   "fn": 31,
+   "fp": 0,
+   "tn": 9,
+   "recall": 0.0,
+   "recall_ci": [
+    0.0,
+    0.1103
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2992
+   ],
+   "extracted_hidden": 0.6774,
+   "located": 0.0
+  },
+  "jsonld": {
+   "tp": 20,
+   "fn": 14,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.5882,
+   "recall_ci": [
+    0.4222,
+    0.7363
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5882
+  },
+  "meta_description": {
+   "tp": 22,
+   "fn": 12,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.6471,
+   "recall_ci": [
+    0.4791,
+    0.7851
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6471
+  },
+  "noscript": {
+   "tp": 16,
+   "fn": 14,
+   "fp": 0,
+   "tn": 9,
+   "recall": 0.5333,
+   "recall_ci": [
+    0.3614,
+    0.6977
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2992
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5333
+  },
+  "offscreen": {
+   "tp": 18,
+   "fn": 13,
+   "fp": 0,
+   "tn": 10,
+   "recall": 0.5806,
+   "recall_ci": [
+    0.4077,
+    0.7358
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2775
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.5806
+  },
+  "opacity_zero": {
+   "tp": 20,
+   "fn": 11,
+   "fp": 0,
+   "tn": 11,
+   "recall": 0.6452,
+   "recall_ci": [
+    0.4695,
+    0.7888
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2588
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6452
+  },
+  "script_literal": {
+   "tp": 2,
+   "fn": 29,
+   "fp": 0,
+   "tn": 9,
+   "recall": 0.0645,
+   "recall_ci": [
+    0.0179,
+    0.2072
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2992
+   ],
+   "extracted_hidden": 0.7097,
+   "located": 0.0645
+  },
+  "svg_desc": {
+   "tp": 23,
+   "fn": 10,
+   "fp": 0,
+   "tn": 11,
+   "recall": 0.697,
+   "recall_ci": [
+    0.5266,
+    0.8262
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2588
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.697
+  },
+  "template": {
+   "tp": 22,
+   "fn": 9,
+   "fp": 0,
+   "tn": 9,
+   "recall": 0.7097,
+   "recall_ci": [
+    0.5341,
+    0.839
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2992
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.7097
+  },
+  "unicode_tags": {
+   "tp": 25,
+   "fn": 7,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.7812,
+   "recall_ci": [
+    0.6124,
+    0.8898
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.7812
+  },
+  "visibility_hidden": {
+   "tp": 21,
+   "fn": 10,
+   "fp": 0,
+   "tn": 10,
+   "recall": 0.6774,
+   "recall_ci": [
+    0.5014,
+    0.8143
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2775
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6774
+  },
+  "visible": {
+   "tp": 6,
+   "fn": 27,
+   "fp": 0,
+   "tn": 11,
+   "recall": 0.1818,
+   "recall_ci": [
+    0.0861,
+    0.3439
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2588
+   ],
+   "extracted_hidden": 0.0303,
+   "located": 0.1818
+  },
+  "zero_font": {
+   "tp": 20,
+   "fn": 11,
+   "fp": 0,
+   "tn": 11,
+   "recall": 0.6452,
+   "recall_ci": [
+    0.4695,
+    0.7888
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.2588
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.6452
+  },
+  "zero_width_split": {
+   "tp": 27,
+   "fn": 5,
+   "fp": 0,
+   "tn": 8,
+   "recall": 0.8438,
+   "recall_ci": [
+    0.6825,
+    0.9314
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3244
+   ],
+   "extracted_hidden": 1.0,
+   "located": 0.8438
+  }
+ },
+ "by_payload_source": {
+  "agentdojo": {
+   "tp": 114,
+   "fn": 70,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.6196,
+   "recall_ci": [
+    0.5476,
+    0.6866
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9728,
+   "located": 0.6196
+  },
+  "bipia": {
+   "tp": 178,
+   "fn": 182,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.4944,
+   "recall_ci": [
+    0.4431,
+    0.5459
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9556,
+   "located": 0.4944
+  },
+  "greshake": {
+   "tp": 3,
+   "fn": 0,
+   "fp": 0,
+   "tn": 0,
+   "recall": 1.0,
+   "recall_ci": [
+    0.4385,
+    1.0
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 1.0
+  },
+  "injecagent": {
+   "tp": 150,
+   "fn": 58,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.7212,
+   "recall_ci": [
+    0.6566,
+    0.7777
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.7212
+  },
+  "opi": {
+   "tp": 24,
+   "fn": 19,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.5581,
+   "recall_ci": [
+    0.4111,
+    0.6957
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.5581
+  }
+ },
+ "by_payload_family": {
+  "agentdojo_direct": {
+   "tp": 16,
+   "fn": 30,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.3478,
+   "recall_ci": [
+    0.2268,
+    0.4923
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9783,
+   "located": 0.3478
+  },
+  "agentdojo_goal": {
+   "tp": 15,
+   "fn": 31,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.3261,
+   "recall_ci": [
+    0.2087,
+    0.4703
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.3261
+  },
+  "agentdojo_ignore_previous": {
+   "tp": 41,
+   "fn": 5,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.8913,
+   "recall_ci": [
+    0.7696,
+    0.9527
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9783,
+   "located": 0.8913
+  },
+  "agentdojo_important_instructions": {
+   "tp": 42,
+   "fn": 4,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.913,
+   "recall_ci": [
+    0.7968,
+    0.9657
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9348,
+   "located": 0.913
+  },
+  "bipia_code": {
+   "tp": 89,
+   "fn": 55,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.6181,
+   "recall_ci": [
+    0.5366,
+    0.6934
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9306,
+   "located": 0.6181
+  },
+  "bipia_text": {
+   "tp": 89,
+   "fn": 127,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.412,
+   "recall_ci": [
+    0.3485,
+    0.4787
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 0.9722,
+   "located": 0.412
+  },
+  "greshake_scenario": {
+   "tp": 3,
+   "fn": 0,
+   "fp": 0,
+   "tn": 0,
+   "recall": 1.0,
+   "recall_ci": [
+    0.4385,
+    1.0
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 1.0
+  },
+  "injecagent_base": {
+   "tp": 52,
+   "fn": 52,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.5,
+   "recall_ci": [
+    0.4056,
+    0.5944
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.5
+  },
+  "injecagent_enhanced": {
+   "tp": 98,
+   "fn": 6,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.9423,
+   "recall_ci": [
+    0.8798,
+    0.9733
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.9423
+  },
+  "opi_combined": {
+   "tp": 6,
+   "fn": 2,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.75,
+   "recall_ci": [
+    0.4093,
+    0.9285
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.75
+  },
+  "opi_escape": {
+   "tp": 3,
+   "fn": 5,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.375,
+   "recall_ci": [
+    0.1368,
+    0.6943
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.375
+  },
+  "opi_fake_completion": {
+   "tp": 3,
+   "fn": 6,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.3333,
+   "recall_ci": [
+    0.1206,
+    0.6458
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.3333
+  },
+  "opi_ignore": {
+   "tp": 9,
+   "fn": 0,
+   "fp": 0,
+   "tn": 0,
+   "recall": 1.0,
+   "recall_ci": [
+    0.7008,
+    1.0
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 1.0
+  },
+  "opi_naive": {
+   "tp": 3,
+   "fn": 6,
+   "fp": 0,
+   "tn": 0,
+   "recall": 0.3333,
+   "recall_ci": [
+    0.1206,
+    0.6458
+   ],
+   "fp_rate": null,
+   "fp_ci": null,
+   "extracted_hidden": 1.0,
+   "located": 0.3333
+  },
+  "bipia_email_benign": {
+   "fp": 0,
+   "tn": 86,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.0428
+   ]
+  },
+  "bipia_table_benign": {
+   "fp": 0,
+   "tn": 86,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.0428
+   ]
+  },
+  "pint_chat": {
+   "fp": 0,
+   "tn": 2,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.6576
+   ]
+  },
+  "pint_hard_negatives": {
+   "fp": 0,
+   "tn": 2,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.6576
+   ]
+  },
+  "pint_long_input": {
+   "fp": 0,
+   "tn": 2,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.6576
+   ]
+  },
+  "synthetic_hidden_ui": {
+   "fp": 0,
+   "tn": 53,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.0676
+   ]
+  }
+ },
+ "by_language": {
+  "en": {
+   "tp": 469,
+   "fn": 329,
+   "fp": 0,
+   "tn": 7,
+   "recall": 0.5877,
+   "recall_ci": [
+    0.5532,
+    0.6214
+   ],
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.3543
+   ],
+   "extracted_hidden": 0.9737,
+   "located": 0.5877
+  },
+  "es": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  },
+  "hi": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  },
+  "ja": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  },
+  "pt": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  },
+  "ru": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  },
+  "zh": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  },
+  "zh-TW": {
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "recall": null,
+   "recall_ci": null,
+   "fp_rate": 0.0,
+   "fp_ci": [
+    0.0,
+    0.7935
+   ]
+  }
+ },
+ "timing": {
+  "scan_ms_mean": 84.01
+ },
+ "render_failures": 0
+}

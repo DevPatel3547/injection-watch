@@ -45,6 +45,66 @@
    "recall": 0.1241,
    "fp_rate": 0.0,
    "quick": false
+  },
+  {
+   "file": "v0.4_rendered.json",
+   "version": "0.4.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.4.0",
+    "ml": false,
+    "mode": "rendered"
+   },
+   "generated_at": "2026-11-09T03:16:11Z",
+   "recall": 0.3446,
+   "fp_rate": 0.0,
+   "quick": false
+  },
+  {
+   "file": "v0.4_static.json",
+   "version": "0.4.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.4.0",
+    "ml": false,
+    "mode": "static"
+   },
+   "generated_at": "2026-11-09T02:57:19Z",
+   "recall": 0.3221,
+   "fp_rate": 0.0,
+   "quick": false
+  },
+  {
+   "file": "v0.4_static_css.json",
+   "version": "0.4.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.4.0",
+    "ml": false,
+    "mode": "static_css"
+   },
+   "generated_at": "2026-11-09T02:51:16Z",
+   "recall": 0.3321,
+   "fp_rate": 0.0,
+   "quick": false
+  },
+  {
+   "file": "v0.4_static_css_ml.json",
+   "version": "0.4.0",
+   "split": "test",
+   "detector": {
+    "name": "injectionwatch",
+    "rules_version": "0.4.0",
+    "ml": true,
+    "mode": "static_css"
+   },
+   "generated_at": "2026-11-09T02:52:13Z",
+   "recall": 0.5877,
+   "fp_rate": 0.0,
+   "quick": false
   }
  ]
 }
