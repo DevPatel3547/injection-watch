@@ -282,27 +282,10 @@ def evaluate_spec(spec: PageSpec, mode: str, scan_kwargs: dict[str, Any] | None 
 # ------------------------------------------------------------------ whole runs
 
 def make_renderer() -> Any:
-    """render.Renderer, falling back to an explicit Chromium path from INJECTIONWATCH_CHROMIUM."""
+    """render.Renderer (honours ``INJECTIONWATCH_CHROMIUM`` for the browser binary)."""
     from ..render import Renderer
 
-    try:
-        return Renderer()
-    except Exception:
-        exe = os.environ.get("INJECTIONWATCH_CHROMIUM")
-        if not exe:
-            raise
-    from playwright.sync_api import sync_playwright
-
-    r = Renderer.__new__(Renderer)
-    r._pw = sync_playwright().start()
-    try:
-        r._browser = r._pw.chromium.launch(headless=True, executable_path=exe)
-        r._ctx = r._browser.new_context(java_script_enabled=True, service_workers="block")
-    except Exception:
-        r._pw.stop()
-        raise
-    r.timeout_ms = 15000
-    return r
+    return Renderer()
 
 
 _WORKER: dict[str, Any] = {}
