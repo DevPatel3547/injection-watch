@@ -1,15 +1,22 @@
 # InjectionWatch
 
-**A measured, reviewed feed of indirect prompt injections on real web pages: hidden or machine-only text
-that tries to instruct AI agents, found by scanning Common Crawl, labelled by a human and published with
-evidence.**
+**Find and strip hidden prompt injections before an AI agent reads them.** InjectionWatch is a detector,
+an agent-side guard (Python, MCP, LangChain), a CI check for site owners, and a measured, human-reviewed
+study of what real web pages hide for agents.
 
 [![CI](https://github.com/DevPatel3547/injection-watch/actions/workflows/ci.yml/badge.svg)](https://github.com/DevPatel3547/injection-watch/actions/workflows/ci.yml)
-Version 0.3.0 (pre-release) · Python 3.11+ · Code: Apache-2.0 · Feed data: CC BY 4.0
+Version 0.4.0 (pre-release) · Python 3.11+ · macOS, Linux, Windows · Code: Apache-2.0 · Feed data: CC BY 4.0
 
-Think PhishTank or URLhaus, but for AI agents. Before an agent reads a page, it (or the tool wrapping
-it) can ask whether that URL is known to carry instructions aimed at it, and see the evidence: where on
-the page the text sits, which rules fired, and when it was captured.
+```bash
+pipx install git+https://github.com/DevPatel3547/injection-watch
+injectionwatch guard https://example.com/some-page     # visible text only, flagged blocks removed
+```
+
+An agent reading raw HTML sees comments, hidden elements, metadata, attributes and the accessibility
+tree. People see none of that. Text placed there can address the agent directly ("AI assistant: ignore
+your previous instructions and..."). `guard` gives the agent only what a person would see, removes
+blocks that look like instructions to an AI, refuses internal addresses (SSRF), and tells you what it
+removed and why.
 
 ---
 
@@ -40,29 +47,127 @@ the page the text sits, which rules fired, and when it was captured.
 
 ## Contents
 
-[Why it matters](#why-it-matters) ·
+[Install](#install) ·
+[Protect an agent](#protect-an-agent) ·
+[Protect your site](#protect-your-site) ·
+[Headline results](#headline-results) ·
 [Notable real findings](#notable-real-findings) ·
 [How it works](#how-it-works) ·
 [Severity taxonomy](#severity-taxonomy) ·
-[Quickstart](#quickstart) ·
+[Developing](#developing) ·
 [CLI reference](#cli-reference) ·
-[Python API](#python-api) ·
 [HTTP API](#http-api) ·
-[MCP tool](#mcp-tool) ·
 [Browser extension](#browser-extension) ·
 [Static site and feed](#static-site-and-feed) ·
 [Evaluation methodology](#evaluation-methodology) ·
 [Ethics](#ethics) ·
 [Limitations](#limitations) ·
 [Roadmap](#roadmap) ·
-[How to cite](#how-to-cite) ·
-[License](#license) ·
-[How this was built](#how-this-was-built)
+[How to cite](#how-to-cite)
 
-Further reading: [docs/BUILD_LOG.md](docs/BUILD_LOG.md) (what was done, in order, and why),
-[docs/ethics.md](docs/ethics.md), [docs/deploy.md](docs/deploy.md), [SECURITY.md](SECURITY.md).
+Further reading: [docs/threat-model.md](docs/threat-model.md), [docs/BUILD_LOG.md](docs/BUILD_LOG.md)
+(what was done, in order, and why), [docs/ethics.md](docs/ethics.md), [docs/deploy.md](docs/deploy.md),
+[SECURITY.md](SECURITY.md), [examples/](examples/).
 
 ---
+
+## Install
+
+Python 3.11 or newer. The core install has four small dependencies; everything else is an optional extra.
+
+```bash
+pipx install git+https://github.com/DevPatel3547/injection-watch            # CLI: guard, scan, scan-site, doctor
+pipx install "injectionwatch[mcp] @ git+https://github.com/DevPatel3547/injection-watch"   # + MCP server
+pip install "injectionwatch[langchain] @ git+https://github.com/DevPatel3547/injection-watch" # into your app's venv
+injectionwatch doctor                                                      # checks this machine, prints fixes
+```
+
+`uv tool install git+https://github.com/DevPatel3547/injection-watch` works the same way. It is not on
+PyPI yet.
+
+**macOS (Apple Silicon or Intel).** `brew install python@3.12 pipx && pipx ensurepath`, then the lines
+above. No compiler is needed: `lxml` ships arm64 wheels. Optional pieces:
+
+* the rendered pass (computed styles, JS-inserted text): `pipx inject injectionwatch playwright`, then
+  either `export INJECTIONWATCH_CHROMIUM="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` or
+  download Playwright's Chromium with `"$(pipx environment --value PIPX_LOCAL_VENVS)/injectionwatch/bin/python" -m playwright install chromium`;
+* the browser extension build: `brew install node`;
+* the optional LLM stage: `export ANTHROPIC_API_KEY=...` (add it to `~/.zshrc`), or a local model with
+  `brew install ollama`.
+
+`injectionwatch doctor` reports each of these, warns when an x86_64 Python runs under Rosetta on an
+Apple Silicon Mac, and never prints your API key. CI runs the full suite on macOS and Linux (Python
+3.11–3.13, with Chromium) and on Windows (Python 3.12, without the rendered pass).
+
+Extras: `api` (HTTP API), `mcp` (MCP server), `render` (Chromium pass), `llm` (Anthropic classifier),
+`langchain`, `train` (offline model training only), `all`, `dev`.
+
+## Protect an agent
+
+**Python.** `guard` never follows links and never runs scripts.
+
+```python
+from injectionwatch import guard, wrap_tool
+
+page = guard.fetch("https://example.com/")        # SSRF-safe GET, 5 MB cap, HTML/text only, 15 s budget
+page.text                                          # human-visible text minus flagged blocks
+page.verdict, page.removed                         # "flagged" | "clean", and what was removed and why
+
+guard.sanitize(html)                               # same, for HTML you already have (no network)
+guard.sanitize_text(tool_output)                   # flagged paragraphs replaced by a marker
+
+@wrap_tool                                         # any tool returning HTML or text
+def search(query: str) -> str: ...
+```
+
+`guard.fetch` resolves the host and refuses loopback, private, link-local (cloud metadata), multicast and
+reserved addresses, including IPv6 and IPv4-mapped forms and legacy numeric hosts such as `2130706433`.
+It re-checks every redirect hop and connects to the address it checked, so DNS rebinding cannot swap it.
+When a system HTTP proxy is configured the proxy does its own DNS lookup. Set
+`FetchPolicy(trust_env_proxy=False)` to connect directly. Runnable versions:
+[`examples/guard_basics.py`](examples/guard_basics.py), [`examples/wrap_any_tool.py`](examples/wrap_any_tool.py).
+
+**MCP** (Claude Desktop, Claude Code, any MCP client). Add the server from
+[`examples/claude_desktop_config.json`](examples/claude_desktop_config.json) (`"command": "injectionwatch-mcp"`).
+
+| tool | returns |
+|---|---|
+| `fetch_url_safely(url)` | the guard result: sanitised visible text, verdict, removed blocks (defanged excerpts) |
+| `scan_page(html, url="")` | findings for HTML the agent already has |
+| `scan_text(text)` | findings for any tool output or document text |
+| `check_url(url)` | feed verdict (`flagged` / `observed_clean` / `unknown` / `unavailable`), no payload text |
+
+Every result labels excerpts as untrusted. The server's instructions tell the agent never to follow them.
+
+**LangChain.** `injectionwatch.integrations.langchain` has `InjectionWatchTransformer` (a document
+transformer that strips or drops flagged documents), `GuardedLoader`, `guard_tool(tool)` and
+`fetch_url_safely_tool()`. See [`examples/langchain_rag.py`](examples/langchain_rag.py).
+
+**What it does not do.** A visible injection passes through unless a rule flags it, and rules miss
+paraphrases (see [Limitations](#limitations)). This reduces exposure; it is not a sandbox. Keep the agent's
+tool permissions narrow.
+
+## Protect your site
+
+Compromised plugins, themes and widgets plant hidden text for agents on sites whose owners never see it.
+Scan your build output in CI:
+
+```bash
+injectionwatch scan-site _site --sarif injectionwatch.sarif    # exit 1 if anything is flagged
+```
+
+or use the GitHub Action ([`examples/github-action.yml`](examples/github-action.yml)):
+
+```yaml
+- uses: DevPatel3547/injection-watch@main   # pin a commit SHA
+  with:
+    path: _site
+    fail-on: flagged          # flagged | any | never
+    upload-sarif: "true"      # findings appear under Security -> Code scanning
+```
+
+The Action writes a job summary and SARIF 2.1.0 (validated against the OASIS schema in the tests). CI runs it
+on this repository's own fixtures.
 
 ## Why it matters
 
@@ -209,19 +314,21 @@ label overrides the detector's (`detector_severity` keeps the original).
 `flagged` = manipulative or malicious with confidence ≥ 0.4. Severity judges what the text asks an agent
 to do, not the site owner's intent.
 
-## Quickstart
+## Developing
 
 ```bash
 git clone https://github.com/DevPatel3547/injection-watch.git
-cd injectionwatch
+cd injection-watch
 python3 -m venv .venv && . .venv/bin/activate
 make install          # pip install -e '.[api,llm,mcp,render,dev]'
+make doctor
 make check            # ruff + mypy + extension build + pytest with coverage gate (>= 85%)
 ```
 
-`make check` builds the browser extension, so it needs Node.js and TypeScript (`npm install -g
-typescript@5`). Playwright's Chromium (`python -m playwright install chromium`) is only needed for the
-rendered pass.
+`make check` builds the browser extension, so it needs Node.js (`brew install node` on a Mac). TypeScript is a
+pinned devDependency (`npm ci`), so no global install is needed. Playwright's Chromium
+(`python -m playwright install chromium`, or `INJECTIONWATCH_CHROMIUM=/path/to/chrome`) is only needed for the
+rendered pass; without it those tests skip with a reason.
 
 Then:
 
@@ -238,6 +345,14 @@ injectionwatch serve --db feed.db                                      # API on 
 ```
 
 `python -m injectionwatch ...` works the same without the console script on `PATH`.
+
+**Live LLM stage.** `make demo-live` classifies 8 fixtures with Claude (`ANTHROPIC_API_KEY` required; it
+estimates the number of requests and asks before sending anything). `make demo-live-fake` rehearses the same path against
+a local server that speaks the Messages API wire format (streaming, tool use, 429/529 with `retry-after`,
+timeouts). The test suite uses that server with the real `anthropic` SDK. Retries honour `retry-after`, and a bad
+key opens a breaker instead of failing on every page. Any failure falls back to the heuristic classifier and
+records why. The classifier forces its tool by default; `INJECTIONWATCH_TOOL_CHOICE=auto` switches that off, and
+it switches itself if the API rejects forced tool use for a model.
 
 **Optional free LLM stage (no API key).** Run [Ollama](https://ollama.com) with a multilingual instruct
 model and add `--classifier local` (`INJECTIONWATCH_LLM_BASE_URL`, default `http://127.0.0.1:11434/v1`;
@@ -256,13 +371,16 @@ python scripts/label_stats.py --hits out/hits.jsonl --labels labels.jsonl --stat
 
 | command | what it does | key options |
 |---|---|---|
+| `doctor` | check Python, arch, extras, Chromium, Node, API key presence; prints a fix for each problem | `--network`, `--json` |
+| `guard URL\|FILE\|-` | SSRF-safe fetch (or a local file), print agent-safe visible text | `--json`, `--fail-on-flagged`, `--max-bytes`, `--timeout`, `--allow-private` |
+| `scan-site DIR` | scan a built static site (CI) | `--sarif`, `--fail-on flagged\|any\|never`, `--format`, `--include`, `--exclude` |
 | `scan PATH` | scan one local HTML file (`-` for stdin), print findings as JSON | `--rendered`, `--css FILE...`, `--llm-recall`, `--classifier` |
 | `scan-warc WARC...` | stream-scan WARC files into SQLite and/or JSONL; resumable | `--db`, `--no-db`, `--jsonl`, `--workers`, `--max-bytes` (2 MB), `--checkpoint-every`, `--limit`, `--stats-out`, `--classifier` |
 | `crawl DOMAINS.csv` | polite crawl of a Tranco-style list (robots.txt, per-host delay) | `--limit` (200), `--delay` (5 s), `--workers`, `--rendered`, `--json-summary` |
 | `cloak URL` | compare the page served to a browser vs AI-agent user agents | `--agents`, `--delay` |
 | `review LABELS.jsonl` | apply human labels (url, payload_hash, label, severity, note) | `--db` |
-| `publish` | build the static site: dashboard, feed files, lookup shards | `--out`, `--reviewed-only`, `--severities`, `--note` |
-| `export` | dump the feed | `--format json\|csv\|stix`, `--out` |
+| `publish` | build the static site: dashboard, feed files, lookup shards | `--out`, `--reviewed-only`, `--severities`, `--note`, `--hold` |
+| `export` | dump the feed | `--format json\|csv\|stix`, `--out`, `--hold` |
 | `report` | generate a "State of Injections" markdown report | `--out`, `--note` |
 | `serve` | run the HTTP API (uvicorn) | `--host`, `--port`, `--rate-limit` |
 | `eval` | precision/recall on the fixture corpora | `--modes static static_css rendered`, `--rendered`, `--json-out`, `--details` |
@@ -271,29 +389,14 @@ python scripts/label_stats.py --hits out/hits.jsonl --labels labels.jsonl --stat
 | `verify-submissions` | re-crawl extension reports and confirm them by payload hash | `--delay` |
 | `agents` | list the AI-agent user-agent catalogue used for cloaking checks | |
 
-Useful `make` targets: `install`, `check`, `eval`, `eval-full` (all corpora × static / static+CSS /
+Global options: `--debug` (tracebacks and debug logs; by default errors are one line with a hint), `--version`.
+`--hold FILE` (or `$INJECTIONWATCH_HOLD_FILE`) names a private list of sites under the disclosure hold. Their
+entries are published only in redacted form, and a missing hold file stops the publish instead of
+publishing unredacted.
+
+Useful `make` targets: `install`, `doctor`, `check`, `demo-live`, `demo-live-fake`, `eval`, `eval-full` (all corpora × static / static+CSS /
 rendered, writes `reports/eval/latest.json`), `warc-demo`, `demo` (local end-to-end on 127.0.0.1),
 `publish`, `serve`, `mcp`, `ext`, `ext-package`, `docker-build`, `docker-run`.
-
-## Python API
-
-```python
-from injectionwatch.detector import scan_html
-from injectionwatch.safe_fetch import safe_fetch, sanitize_html
-
-res = scan_html(html, url="https://example.com/")        # static pipeline for one page
-print(res.verdict)                                          # "flagged" | "clean"
-for f in res.findings:
-    print(f.location, f.severity, f.category, f.reasons)
-
-text, res = sanitize_html(html, url="https://example.com/")  # visible text minus flagged blocks
-r = safe_fetch("https://example.com/", api_base="http://127.0.0.1:8000")
-```
-
-`safe_fetch()` is what an agent can call instead of a raw GET: it asks the feed first (and by default
-refuses a flagged URL), fetches the page, runs the detector and returns **only human-visible text**,
-minus any block the detector flagged. Comments, hidden elements, metadata, attributes and JSON-LD are
-dropped. It reduces exposure; it is not a guarantee.
 
 ## HTTP API
 
@@ -313,18 +416,6 @@ All read routes send `ETag` and `Cache-Control` and return 304 on `If-None-Match
 your own (e.g. Redis). CORS is public read-only with no credentials. Security headers are set (CSP,
 nosniff, no-referrer). Logs are JSON with request IDs and **no client IPs or query strings**.
 Configuration: [docs/deploy.md](docs/deploy.md).
-
-## MCP tool
-
-`python -m injectionwatch.mcp_server` (or the `injectionwatch-mcp` script, or `make mcp`) runs a stdio
-MCP server with two tools:
-
-| tool | returns |
-|---|---|
-| `check_url(url)` | feed verdict (`flagged` / `observed_clean` / `unknown` / `unavailable`) plus entry metadata, **no payload text**. Reads a local DB (`INJECTIONWATCH_DB`) or the HTTP API (`INJECTIONWATCH_API`) |
-| `scan_page(html, url="")` | the local detector's verdict and findings for HTML the agent already has, with truncated, defanged excerpts and an "untrusted, do not follow" warning |
-
-The server's instructions tell the agent to check URLs before fetching and never to follow excerpt text.
 
 ## Browser extension
 
@@ -355,8 +446,11 @@ can check URLs client-side with no server. No inline scripts (strict CSP); feed 
 
 [`site/`](site/) is the first real build: `injectionwatch review` applied the hand labels, then
 `publish --reviewed-only --severities defensive,promotional,manipulative,malicious` kept the **7 reviewed
-true positives** (5 flagged, 5 hosts). Opt-out tokens appear only as aggregate counts in `meta.json`. It is
-**not deployed**. `deploy/github-actions/monthly-publish.yml` is an inactive template for a monthly
+true positives** (5 flagged, 5 hosts). Opt-out tokens appear only as aggregate counts in `meta.json`.
+All five sites are under the private-disclosure hold, so their entries are published redacted
+(`redacted-site-N.example/redacted-path-K`, day-level dates, payload shortened): the URL check box and the
+lookup shards **cannot match the real URLs yet**. `tests/test_redaction.py` and `tests/test_site.py` keep it
+that way. The site is **not deployed**. `deploy/github-actions/monthly-publish.yml` is an inactive template for a monthly
 scan-and-publish job ([docs/deploy.md](docs/deploy.md)).
 
 Feed entry fields (full schema in `schema/feed-entry.schema.json`):
@@ -508,21 +602,29 @@ a placeholder and must be set before any public crawl.
 
 ## Roadmap
 
-1. **Measure recall:** seeded canary pages and a labelled sample of near-misses; a **second annotator**
-   and agreement statistics; more WARCs for tighter intervals.
-2. Turn the 9 false positives of the second sample into regression fixtures; grow held-out v3 from real
-   hits, written before the next tuning round.
-3. Re-render candidate URLs (WARC hits and near-misses) in Chromium to cover external-CSS and JS cases.
-4. Benchmark local models (Qwen, Llama, Gemma) as the stage-2 classifier, and calibrate confidence.
-5. Template clustering and campaign tracking across hosts; CMS and plugin attribution for disclosure.
-6. Activate the monthly publish job; TAXII 2.1 endpoint; signed feed releases.
+1. **Real-web recall:** run `scripts/scan_cc.py --near-miss-sample` on new Common Crawl samples, label the
+   near-misses, and add a **second annotator** with agreement statistics. More WARCs for tighter intervals.
+2. Re-render candidate URLs (WARC hits and near-misses) in Chromium to cover external-CSS and JS cases.
+3. Benchmark local models (Qwen, Llama, Gemma) as the stage-2 classifier, and calibrate confidence.
+4. Template clustering and campaign tracking across hosts; CMS and plugin attribution for disclosure.
+5. Activate the monthly publish job; TAXII 2.1 endpoint; signed feed releases.
+
+### Deferred (planned for 0.4, not done)
+
+* **X-ray page on the site**: paste HTML and see what a person sees next to what an agent sees. The shared
+  collector it needs (`extension/src/collect.ts`) is in place; the page is not.
+* **PyPI release**: needs the maintainer's PyPI account; install from git until then.
+* **Chrome Web Store listing** for the extension, and **deploying the site** to GitHub Pages.
+* **A README capture** (screenshot or GIF) of the dashboard and the guard in action.
+* **A second real-web sample**: Common Crawl was not reachable from the build environment, so no new
+  pages were scanned for 0.4. All real-web numbers above are still the single CC-MAIN-2026-39 sample.
 
 ## How to cite
 
 See [CITATION.cff](CITATION.cff):
 
 ```
-Patel, D. (2026). InjectionWatch: an open feed of indirect prompt injections on the web (v0.3.0) [Software].
+Patel, D. (2026). InjectionWatch: an open feed of indirect prompt injections on the web (v0.4.0) [Software].
 https://github.com/DevPatel3547/injection-watch
 ```
 
