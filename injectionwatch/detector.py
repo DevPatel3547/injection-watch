@@ -1,4 +1,10 @@
-"""Two-stage detector: extract -> rule score -> (LLM) classify -> findings."""
+"""Two-stage detector: extract -> rule score (+ optional learned score) -> (LLM) classify -> findings.
+
+v0.4: ``ml`` adds the learned second stage (injectionwatch/ml.py). For a non-visible candidate that no rule fired
+on, a hashed n-gram model score at or above the model's dev-chosen threshold also produces a finding
+(``classifier="ml"``, category from any rule hits or ``other``, intent ``manipulative``). Rules stay
+authoritative; the model never removes a rule finding. ``ml=None`` uses ``ml.ml_default_enabled()``.
+"""
 from __future__ import annotations
 
 import re
@@ -37,6 +43,7 @@ class Finding:
     reasons: list[str]
     path: str = ""
     classifier: str = "heuristic"
+    ml_score: float | None = None
 
     @property
     def flagged(self) -> bool:
@@ -65,6 +72,7 @@ class ScanResult:
     findings: list[Finding] = field(default_factory=list)
     candidates_examined: int = 0
     llm_calls: int = 0
+    ml_used: bool = False
 
     @property
     def verdict(self) -> str:
@@ -85,18 +93,50 @@ def _recall_eligible(c: Candidate, has_hits: bool) -> bool:
     return has_hits or bool(_AI_TERM_RE.search(clean_for_scoring(c.text)))
 
 
+def _resolve_ml(ml: Any) -> Any:
+    """None -> configured default; True -> bundled model; False -> off; a Model instance -> that model."""
+    from . import ml as ml_mod
+
+    if ml is None:
+        ml = ml_mod.ml_default_enabled()
+    if ml is True:
+        return ml_mod.load_model()
+    if ml is False:
+        return None
+    return ml
+
+
 def scan_candidates(cands: list[Candidate], url: str = "", classifier: Classifier | None = None,
-                    llm_recall_mode: bool = False, max_recall_calls: int = RECALL_MAX_CALLS) -> ScanResult:
+                    llm_recall_mode: bool = False, max_recall_calls: int = RECALL_MAX_CALLS, *,
+                    ml: Any = None) -> ScanResult:
     """``llm_recall_mode``: also send gated near-misses (non-visible, >=40 chars, mentions an AI system
     or matched a rule, at most ``max_recall_calls`` per page) to a non-heuristic classifier. Catches
     paraphrased payloads the rules miss, at extra (local) inference cost."""
     classifier = classifier or HeuristicClassifier()
+    model = _resolve_ml(ml)
     discussion = page_is_discussion([c.text for c in cands if c.location == "visible"])
-    res = ScanResult(url=url, candidates_examined=len(cands))
+    res = ScanResult(url=url, candidates_examined=len(cands), ml_used=model is not None)
     seen: set[tuple[str, str]] = set()
     recall_calls = 0
     for c in cands:
         sr = score_text(c.text, c.location, c.in_code, c.techniques, discussion)
+        if not sr.fired and model is not None and not sr.blob and not (c.in_code and c.location == "visible"):
+            mscore, mfired = model.fires(c.text, c.location)
+            if mfired:
+                h = payload_hash(c.text)
+                if (h, c.location) in seen:
+                    continue
+                seen.add((h, c.location))
+                cl = HeuristicClassifier().classify(c.text, c.location, sr)
+                res.findings.append(Finding(
+                    payload_excerpt=excerpt(c.text), payload_hash=h, location=c.location,
+                    techniques=list(c.techniques), category=cl.category, intent="manipulative", target=cl.target,
+                    confidence=round(min(0.95, 0.5 + 0.5 * mscore), 3), heuristic_score=sr.score,
+                    reasons=[*sr.reasons, f"learned scorer: {mscore:.3f} >= threshold {model.threshold:g} "
+                             "(no rule fired; hashed n-gram model, see injectionwatch/ml.py)",
+                             f"placement: {', '.join(c.techniques) or c.location}"],
+                    path=c.path, classifier="ml", ml_score=round(mscore, 4)))
+                continue
         if not sr.fired:
             if not (llm_recall_mode and classifier.name != "heuristic" and recall_calls < max_recall_calls
                     and _recall_eligible(c, bool(sr.hits))):
@@ -144,13 +184,13 @@ def scan_candidates(cands: list[Candidate], url: str = "", classifier: Classifie
 
 def scan_html(html: str, url: str = "", headers: dict[str, str] | None = None,
               classifier: Classifier | None = None, rendered_candidates: list[Candidate] | None = None,
-              llm_recall_mode: bool = False, css_resolver: CssResolver | None = None) -> ScanResult:
+              llm_recall_mode: bool = False, css_resolver: CssResolver | None = None, *, ml: Any = None) -> ScanResult:
     """Full pipeline for one page. ``css_resolver`` optionally supplies external stylesheets
     (never fetched by the detector itself); ``rendered_candidates`` come from render.Renderer."""
     cands = extract_candidates(html, headers, css_resolver=css_resolver, base_url=url)
     if rendered_candidates:
         cands = merge_rendered(cands, rendered_candidates)
-    return scan_candidates(cands, url, classifier, llm_recall_mode)
+    return scan_candidates(cands, url, classifier, llm_recall_mode, ml=ml)
 
 
 def merge_rendered(static: list[Candidate], rendered: list[Candidate]) -> list[Candidate]:

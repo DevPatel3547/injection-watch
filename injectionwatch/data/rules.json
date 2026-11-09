@@ -1,6 +1,6 @@
 {
-  "_comment": "Shared by the Python scorer and the browser extension. Patterns are matched case-insensitively after NFKC normalization (of both pattern and text) and must stay JS-compatible: no lookbehind, no inline flags, no named groups, and never \\\\b next to a non-ASCII letter (JS \\\\b is ASCII-only). Edit this file directly; tests/test_rules.py checks Python/JS parity. v0.3: rules with needs_context=true only count when the same candidate also matched a rule from context_categories (otherwise login forms, privacy policies and support pages trip them); categories in single_count_categories count once toward the two-rule minimum; structured state blobs (JSON app state, spintax) only fire when they address an AI.",
-  "version": "0.3.0",
+  "_comment": "Shared by the Python scorer and the browser extension. Patterns are matched case-insensitively after NFKC normalization (of both pattern and text) and must stay JS-compatible: no lookbehind, no inline flags, no named groups, and never \\\\b next to a non-ASCII letter (JS \\\\b is ASCII-only). Edit this file directly; tests/test_rules.py checks Python/JS parity. v0.3: rules with needs_context=true only count when the same candidate also matched a rule from context_categories (otherwise login forms, privacy policies and support pages trip them); categories in single_count_categories count once toward the two-rule minimum; structured state blobs (JSON app state, spintax) only fire when they address an AI. v0.4: misspelled-override and task-hijack rules; new extraction locations css_content and svg (factor 1.0) and script (0.45: inline JS strings are often UI or config text, so only multi-signal payloads fire there). v0.4 agentreq.*: weak user-voice action signals that fire only in pairs.",
+  "version": "0.4.0",
   "threshold": 3.0,
   "combo_bonus": 1.0,
   "location_factors": {
@@ -14,6 +14,9 @@
     "invisible_unicode": 1.0,
     "http_header": 1.0,
     "cloaked": 1.0,
+    "script": 0.45,
+    "css_content": 1.0,
+    "svg": 1.0,
     "visible": 0.6
   },
   "in_code_factor": 0.25,
@@ -84,6 +87,24 @@
       "standalone": false,
       "pattern": "\\b(?:automated|autonomous)\\s+(?:readers?|assistants?|agents?|summari[sz]ers?)\\b",
       "desc": "Automated readers/agents as an audience"
+    },
+    {
+      "id": "addr.task_i_gave_you",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:the\\s+)?(?:task|request|question|instructions?)\\s+(?:that\\s+)?(?:i|the\\s+user)\\s+(?:gave|assigned|asked)\\s+you\\b|\\b(?:task|request)\\s+(?:that\\s+)?(?:i|the\\s+user)\\s+(?:gave|assigned)\\s+you\\s+in\\s+the\\s+beginning\\b",
+      "desc": "v0.4: refers to the task the user gave the agent: text addressed to an AI agent"
+    },
+    {
+      "id": "addr.user_voice_request",
+      "lang": "en",
+      "category": "ai_addressing",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "(?:^|[.!?:]\\s+)(?:first,?\\s+|now,?\\s+|then,?\\s+)?(?:please|can\\s+you|could\\s+you|would\\s+you|kindly|i\\s+need\\s+you\\s+to|i\\s+want\\s+you\\s+to)\\s+[^.\\n]{0,100}?\\b(?:my|me|for\\s+me)\\b",
+      "desc": "v0.4: a request written in the user's voice to an assistant ('Please ... my ...', 'Can you ... for me'); counts once, only with a second signal"
     },
     {
       "id": "addr.for_ai_heading",
@@ -158,6 +179,24 @@
       "desc": "Role hijack"
     },
     {
+      "id": "override.misspelled",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 4,
+      "standalone": true,
+      "pattern": "\\b(?:ignore|disregard|forget|override)\\s+(?:(?:all|any|the|your|of|these|those)\\s+)*(?:previous|prior|above|earlier|preceding|original|initial)\\s+(?=[a-z]*(?:str|stu|tru|nst))i[a-z]{6,12}ions?\\b",
+      "desc": "v0.4: override with a misspelled 'instructions' (typos are a filter-evasion trick; e.g. AgentDojo's ignore_previous attack)"
+    },
+    {
+      "id": "override.task_hijack",
+      "lang": "en",
+      "category": "instruction_override",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:before|instead\\s+of)\\s+(?:you\\s+)?(?:can\\s+|start\\s+(?:to\\s+)?|begin\\s+(?:to\\s+)?)?(?:solve|solving|complete|completing|do|doing|finish|finishing|answer|answering|continue|continuing|work(?:ing)?\\s+on|proceed(?:ing)?\\s+with)\\s+(?:with\\s+)?(?:the|your|my|this)\\s+(?:original\\s+|current\\s+|actual\\s+|assigned\\s+)?(?:task|request|question|assignment)\\b",
+      "desc": "v0.4: inserts a step before the agent's own task ('before you can solve the task ...'); counts only with a second signal"
+    },
+    {
       "id": "role.chat_tokens",
       "lang": "en",
       "category": "role_injection",
@@ -230,6 +269,51 @@
       "pattern": "\\b(?:download|install|run|execute|open|launch)\\b[^.\\n]{0,80}https?://[^\\s\\\"'<>]+\\.(?:exe|msi|apk|dmg|pkg|sh|ps1|bat|scr|jar|vbs|cmd)\\b",
       "desc": "Asks to download/run an executable",
       "needs_context": true
+    },
+    {
+      "id": "agentreq.my_asset",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:unlock|transfer|deposit|withdraw|sell|delete|remove|move|share|grant|initiate|cancel|disable|retrieve|download|access|install|turn\\s+off|open|empty|wipe|export|forward)\\b[^.\\n]{0,60}?\\bmy\\s+(?:[\\w'-]+\\s+){0,2}(?:account|accounts|door|lock|password|passwords|files?|folders?|data|records?|holdings|repository|repo|bank|wallet|funds?|money|card|history|messages?|emails?|inbox|contacts|address(?:es)?|location|calendar|device|home|car|medical|prescriptions?|genetic|photos?|documents?|drive|dropbox|server|keys?)\\b",
+      "desc": "v0.4: acts on the user's own accounts, devices or data, in the user's voice ('unlock my front door'); counts only with a second signal"
+    },
+    {
+      "id": "agentreq.send_to_address",
+      "lang": "en",
+      "category": "data_exfiltration",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:send|email|e-mail|forward|share|mail|upload|post)\\b[^.\\n]{0,120}?\\bto\\s+(?:my\\s+(?:alternate|backup|other|personal|secondary)\\s+)?(?:e-?mail(?:\\s+address)?\\s*[,:]?\\s*)?['\"]?[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+",
+      "desc": "v0.4: sends something to an e-mail address; counts only with a second signal"
+    },
+    {
+      "id": "agentreq.move_money",
+      "lang": "en",
+      "category": "tool_invocation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:transfer|send|pay|deposit|wire|initiate\\s+a\\s+payment\\s+of)\\s+(?:\\$\\s?|usd\\s*|€|£)?\\d[\\d,.]*\\s*(?:usd|dollars|eur|euros?|btc|bitcoin|eth)?\\b[^.\\n]{0,80}?\\b(?:to|into)\\s+(?:the\\s+)?(?:account|payee|iban|wallet|recipient|[A-Z]{2}\\d{10,})",
+      "desc": "v0.4: moves an amount of money to an account; counts only with a second signal"
+    },
+    {
+      "id": "steer.code_into_output",
+      "lang": "en",
+      "category": "user_manipulation",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\b(?:the\\s+)?(?:following|subsequent|below|above)\\s+(?:code\\s+)?(?:snippet|block|excerpt|section|code)\\b[^.\\n]{0,80}?\\b(?:your|the)\\s+(?:code(?:base)?|implementation|solution(?:\\s+architecture)?|algorithm|response|answer|reply|output|elucidation|program|script)\\b|\\byour\\s+(?:code(?:base)?|implementation|solution|algorithm|response|answer|output)\\b[^.\\n]{0,80}?\\b(?:the\\s+)?(?:following|subsequent|below)\\s+(?:code\\s+)?(?:snippet|block|excerpt|section)\\b",
+      "desc": "v0.4: asks the reader to put a given code block into the code or answer it produces; counts only with a second signal"
+    },
+    {
+      "id": "exfil.code_sink",
+      "lang": "en",
+      "category": "data_exfiltration",
+      "weight": 2,
+      "standalone": false,
+      "pattern": "\\brequests\\.(?:post|put)\\s*\\(|\\bsocket\\.(?:connect|send|sendall)\\s*\\(|\\burllib\\.request\\.urlopen\\s*\\(|\\bsmtplib\\.SMTP|\\bftplib\\.FTP|\\bpyperclip\\.paste\\s*\\(|\\bpynput\\b|\\bkeyboard\\.on_press\\b|\\bImageGrab\\.grab\\s*\\(|\\bgetpass\\.getuser\\s*\\(|\\bos\\.environ\\b[^\\n]{0,60}\\brequests\\.|\\bnavigator\\.sendBeacon\\s*\\(|\\bfetch\\s*\\([^)]{0,80}method\\s*:\\s*['\"]POST",
+      "desc": "v0.4: code that sends local data out (HTTP POST, sockets, clipboard, keystrokes, screenshots); counts only with a second signal"
     },
     {
       "id": "exfil.send_data",

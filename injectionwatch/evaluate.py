@@ -16,6 +16,8 @@ Corpora (see README "Evaluation"):
   fixtures_dev/         dev v2 (paraphrase / multilingual / CSS / educational context; tuned against)
   fixtures_holdout/     held-out v1 - BURNED: its failures were studied while tuning v0.2
   fixtures_holdout_v2/  held-out v2 - written and frozen (MANIFEST.sha256) BEFORE v0.2 tuning
+  fixtures_holdout_v3/  held-out v3 - frozen BEFORE v0.4 tuning: public test-split payloads (InjecAgent, BIPIA,
+                        AgentDojo, OPI) planted into small pages + benign pages of the real-web FP template types
   fixtures_realweb/     real-web regression (v0.3): anonymised true positives and false-positive templates from
                         the first Common Crawl scan. IN-SAMPLE for v0.3 - the v0.3 fixes were written against it
 """
@@ -36,6 +38,7 @@ CORPORA = {
     "dev_v2": ROOT / "fixtures_dev",
     "holdout_v1_burned": ROOT / "fixtures_holdout",
     "holdout_v2": ROOT / "fixtures_holdout_v2",
+    "holdout_v3": ROOT / "fixtures_holdout_v3",
     "realweb_regression": ROOT / "fixtures_realweb",
 }
 MODES = ("static", "static_css", "rendered")

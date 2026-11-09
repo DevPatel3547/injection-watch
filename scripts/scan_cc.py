@@ -10,9 +10,16 @@ pool, deletes each WARC after scanning, and writes:
     out/hit_pages/index.jsonl   page_id -> url, WARC, offset, HTTP response headers
     out/selected_warcs.txt      the sampled WARC paths (reproducible with --seed)
     out/feed.db                 optional (--db): findings stored with InjectionWatch's DB layer
+    out/near_misses.jsonl       optional (--near-miss-sample K): seeded stratified uniform sample of K non-firing
+    out/near_miss_strata.json   non-visible candidates per location + population counts, for a recall estimate
+
+Everything in out/ is PRIVATE (real URLs, WARC offsets, full hidden text). To commit results, use
+``--public-out DIR [--redact-hosts private.json]``: it drops WARC locators, makes page ids opaque, reduces
+redacted hosts to redacted-site-N.example/redacted-path-K with omitted passages, and masks e-mail/phone numbers.
 
 Usage:
-    python scripts/scan_cc.py --crawl CC-MAIN-2026-40 --paths warc.paths.gz --max 20 --out out --db out/feed.db
+    python scripts/scan_cc.py --crawl CC-MAIN-2026-40 --paths warc.paths.gz --max 20 --out out --db out/feed.db \
+        --near-miss-sample 25 --public-out public/
 
 ``injectionwatch scan-warc`` is the production path (resumable, DB-native). This harness adds the page
 timeout, the detection funnel and saved hit pages needed to hand-label a sample.
@@ -51,7 +58,7 @@ def _alarm(signum, frame):
     raise _Timeout()
 
 
-def _winit() -> None:
+def _winit(nm_k: int = 0, nm_seed: str = "0") -> None:
     from injectionwatch import detector, scorer
     from injectionwatch.extract import extract_candidates
 
@@ -62,6 +69,7 @@ def _winit() -> None:
     orig = scorer.score_text
     rec = {"rule_nonvisible": False, "rule_any": False, "over_thr": False}
     _W["rec"] = rec
+    _W["nm_k"], _W["nm_seed"] = nm_k, nm_seed
 
     def wrapped(text, location="hidden_css", in_code=False, techniques=None, page_is_discussion=False):
         sr = orig(text, location, in_code, techniques, page_is_discussion)
@@ -125,6 +133,11 @@ def scan_page(task):
             d["hidden_text"] = cand_text.get((f.payload_hash, f.location), f.payload_excerpt)[:1000]
             findings.append(d)
         out["findings"] = findings
+        if _W.get("nm_k"):
+            from sample_near_misses import page_near_misses
+
+            out["nm_pop"], out["nm_sample"] = page_near_misses(
+                cands, {f.payload_hash for f in res.findings}, f"{warc}:{offset}", _W["nm_seed"], _W["nm_k"])
         if findings:
             out["html"] = body
             out["headers"] = dict(list(headers.items())[:KEEP_HEADERS])
@@ -203,6 +216,10 @@ def main() -> None:
     ap.add_argument("--hit-page-cap", type=int, default=5000)
     ap.add_argument("--db", default=None, help="also store findings in an InjectionWatch SQLite DB")
     ap.add_argument("--base", default=BASE, help="download prefix (file:// works for local tests)")
+    ap.add_argument("--near-miss-sample", type=int, default=0, metavar="K",
+                    help="also sample K non-firing non-visible candidates per location (recall estimate)")
+    ap.add_argument("--public-out", default=None, metavar="DIR", help="at the end, write public-safe copies here")
+    ap.add_argument("--redact-hosts", default=None, help="private JSON {host: redacted-site-N.example}")
     a = ap.parse_args()
 
     from injectionwatch import __version__
@@ -242,6 +259,11 @@ def main() -> None:
     saved_pages = 0
     errors_sample: list[dict[str, Any]] = []
     cfg, _ = load_rules()
+    sampler = None
+    if a.near_miss_sample:
+        from sample_near_misses import NearMissSampler
+
+        sampler = NearMissSampler(a.near_miss_sample, str(a.seed))
 
     def write_stats(done: bool = False) -> None:
         el = time.time() - T0
@@ -265,6 +287,8 @@ def main() -> None:
             },
             "done": done,
         }
+        if sampler is not None:
+            sampler.write(a.out)
         tmp = os.path.join(a.out, "scan_stats.json.tmp")
         with open(tmp, "w") as f:
             json.dump(stats, f, indent=2)
@@ -291,6 +315,10 @@ def main() -> None:
             G[{"rule_any": "pages_rule_match_any", "rule_nonvisible": "pages_rule_match_nonvisible",
                "over_thr": "pages_over_threshold"}[k]] += int(r[k])
         G["pages_with_nonvisible_candidate"] += int(bool(r["n_nonvisible"]))
+        if sampler is not None and "nm_pop" in r:
+            pid = hashlib.sha1(f'{r["warc"]}:{r["offset"]}'.encode()).hexdigest()[:16]
+            sampler.add({"page_id": pid, "url": r["url"], "warc": r["warc"], "offset": r["offset"],
+                         "warc_date": date}, r["nm_pop"], r["nm_sample"])
         fs = r["findings"]
         if not fs:
             return
@@ -359,7 +387,8 @@ def main() -> None:
     th = threading.Thread(target=fetcher, args=(chosen,), daemon=True)
     th.start()
 
-    with ProcessPoolExecutor(max_workers=a.workers, initializer=_winit) as ex:
+    with ProcessPoolExecutor(max_workers=a.workers, initializer=_winit,
+                             initargs=(a.near_miss_sample, str(a.seed))) as ex:
         for i, p in enumerate(chosen):
             if i >= a.initial and time.time() - T0 > a.budget_s:
                 log(f"budget exceeded after {i} WARCs; stopping")
@@ -420,6 +449,13 @@ def main() -> None:
                                     "findings": G["findings_total"], "pages_flagged": G["pages_flagged"],
                                     "findings_by_severity": dict(by_sev), "pages_by_severity": dict(by_sev_pages)})
         db.commit()
+    hits_fp.close()
+    idx_fp.close()
+    if a.public_out:
+        from sample_near_misses import public_out
+
+        for p in public_out(a.out, a.public_out, a.redact_hosts):
+            log(f"public: {p}")
     log("ALL DONE")
 
 

@@ -38,7 +38,10 @@ removed and why.
 > | AI opt-out signals (`noai` / `noimageai`) | **61.0 per 100,000 pages** (54.0–68.9): 260 pages on 177 sites; 314/320 checked genuine |
 > | Where it started | the first real scan with the original **v0.1** rules (10 other WARCs, **213,688 pages**) had precision **0.027** (4/150 labelled, 0.010–0.067) |
 > | Synthetic held-out set v2 (46 pages, frozen before tuning) | v0.1: precision 0.33 / recall 0.08 → v0.2 static: **0.95 / 0.83**, rendered: **0.96 / 1.00** → v0.3 static: **1.00 / 0.83**, rendered: **1.00 / 1.00** |
+> | [IW-Bench](#iw-bench-planted-recall) recall: public injection datasets planted into real pages with 25 hiding techniques (test split, 798 hidden plants, static + CSS) | v0.3: **12.4%** (10.3–14.9) → v0.4: **33.2%** (30.0–36.6); false positives on 174 unmodified real pages: **0** in both (upper bound 2.2%) |
 >
+> The hand-written fixtures overstate recall: on public attack datasets the v0.4 rules still miss about
+> two thirds of hidden payloads, mostly plain task requests with no override or AI-addressing phrasing.
 > Recall on the real web is **not measured**, so the prevalence figures are lower bounds for what a
 > static, rule-based scan can see. With precision at 0.44, the detector is a triage tool: the published
 > feed contains **only human-reviewed true positives**.
@@ -59,7 +62,7 @@ removed and why.
 [HTTP API](#http-api) ·
 [Browser extension](#browser-extension) ·
 [Static site and feed](#static-site-and-feed) ·
-[Evaluation methodology](#evaluation-methodology) ·
+[Evaluation methodology](#evaluation-methodology) ([IW-Bench](#iw-bench-planted-recall)) ·
 [Ethics](#ethics) ·
 [Limitations](#limitations) ·
 [Roadmap](#roadmap) ·
@@ -218,7 +221,7 @@ flowchart LR
     CR["polite crawler<br/>robots.txt, 5 s per host"] --> X
     W --> X["extract.py<br/>hidden and machine-only<br/>text candidates"]
     R["render.py, optional<br/>Chromium computed styles"] --> X
-    X --> S["scorer.py<br/>101 rules, 10 languages,<br/>context factors"]
+    X --> S["scorer.py<br/>110 rules, 10 languages,<br/>context factors"]
     S --> C["classify.py<br/>heuristic, local LLM<br/>or Anthropic; can veto"]
     C --> D[("SQLite<br/>entries and observations")]
     D --> H["human review<br/>injectionwatch review"]
@@ -236,10 +239,11 @@ polite crawler ────► crawler.py (robots.txt, 5 s/host, own UA, no evas
                                                                                      ▼
           extract.py  candidates: comments, meta, hidden CSS (cascade: <style>, optional external
               │       sheets, soupsieve selectors, !important), aria-hidden, attributes, JSON-LD,
-              │       noscript/template, Unicode tag smuggling, zero-width splitting, HTTP headers, visible
+              │       noscript/template, Unicode tag smuggling, zero-width splitting, HTTP headers,
+              │       prose-like script strings, CSS ::before/::after content, iframe srcdoc, SVG title/desc, visible
               │  ◄── render.py (optional): Chromium computed styles via js/hidden_text.js
               ▼
-          scorer.py   101 rules (en, es, fr, de, pt, zh, ja, ru, hi, ar) from data/rules.json
+          scorer.py   110 rules (en, es, fr, de, pt, zh, ja, ru, hi, ar) from data/rules.json
               │       × context: location, code block, page-discusses-injection, quoted mention, obfuscation
               ▼       fires only if score ≥ 3 and (a standalone rule or ≥ 2 substantive rules)
           classify.py heuristic │ local OpenAI-compatible LLM (Ollama) │ Anthropic (optional) ─ can veto
@@ -252,11 +256,12 @@ extension/ (MV3): same rules.json + hidden_text.js, scored locally; parity with 
 
 **1. Extract.** Every page is turned into *candidates*: pieces of text plus where they live (comment,
 `<meta>`, hidden by CSS, `aria-hidden`, attribute, JSON-LD, `<noscript>`/`<template>`, invisible Unicode,
-HTTP header, or visible text). Hidden-by-CSS uses a static cascade over inline `<style>` blocks (and
+HTTP header, prose-like inline-script string, CSS `::before`/`::after` `content`, `iframe srcdoc`, SVG
+`title`/`desc`, or visible text). Hidden-by-CSS uses a static cascade over inline `<style>` blocks (and
 external sheets if supplied) with real selectors; the optional rendered pass asks Chromium for computed
 styles instead.
 
-**2. Score.** 101 rules in `injectionwatch/data/rules.json` (49 English, the rest across es, fr, de, pt,
+**2. Score.** 110 rules in `injectionwatch/data/rules.json` (58 English, the rest across es, fr, de, pt,
 zh, ja, ru, hi, ar) cover the core intents: addressing an AI, overriding instructions, hiding things from
 the user, exfiltrating data, steering the user, manipulating recommendations. Structural features add
 vocative + imperative ("Assistant, quietly include..."), audience phrases ("automated readers"),
@@ -336,6 +341,7 @@ Then:
 injectionwatch scan fixtures/pages/01_comment_ignore_previous.html     # one page, static -> JSON findings
 injectionwatch scan page.html --rendered                               # + Chromium rendered pass
 injectionwatch eval                                                    # precision/recall on all fixture corpora
+make bench-data && make bench                                          # IW-Bench: fetch pinned sources, run test split
 
 make warc-demo                                                         # synthetic WARC from fixtures, then scan-warc
 injectionwatch scan-warc CC-MAIN-*.warc.gz --db feed.db --jsonl hits.jsonl --workers 8   # bulk, resumable
@@ -384,6 +390,7 @@ python scripts/label_stats.py --hits out/hits.jsonl --labels labels.jsonl --stat
 | `report` | generate a "State of Injections" markdown report | `--out`, `--note` |
 | `serve` | run the HTTP API (uvicorn) | `--host`, `--port`, `--rate-limit` |
 | `eval` | precision/recall on the fixture corpora | `--modes static static_css rendered`, `--rendered`, `--json-out`, `--details` |
+| `bench data` / `bench run` | IW-Bench: fetch pinned public datasets and carriers; measure planted recall and FP | `--mode static\|static_css\|rendered\|all`, `--split dev\|test`, `--quick`, `--ml on\|off` |
 | `status ID STATUS` | takedown / appeal handling: `active`, `removed`, `disputed`, `suppressed` | `--note` |
 | `merge-feed FEED.json` | merge a previously published feed so history carries forward | `--db` |
 | `verify-submissions` | re-crawl extension reports and confirm them by payload hash | `--delay` |
@@ -394,7 +401,7 @@ Global options: `--debug` (tracebacks and debug logs; by default errors are one 
 entries are published only in redacted form, and a missing hold file stops the publish instead of
 publishing unredacted.
 
-Useful `make` targets: `install`, `doctor`, `check`, `demo-live`, `demo-live-fake`, `eval`, `eval-full` (all corpora × static / static+CSS /
+Useful `make` targets: `install`, `doctor`, `check`, `demo-live`, `demo-live-fake`, `bench-data`, `bench`, `eval`, `eval-full` (all corpora × static / static+CSS /
 rendered, writes `reports/eval/latest.json`), `warc-demo`, `demo` (local end-to-end on 127.0.0.1),
 `publish`, `serve`, `mcp`, `ext`, `ext-package`, `docker-build`, `docker-run`.
 
@@ -507,8 +514,45 @@ unchanged original detector, run immediately after the set was written.
   rendering; burned held-out v1 recall is 0.60 / 0.80 / 1.00 (static / CSS / rendered).
 * One person wrote the held-out pages, the dev pages and the rules, so held-out v2 is independent of
   *tuning* but not of the *author*. 46 pages give wide intervals: 20/24 recall has a 95% Wilson interval of
-  0.64–0.93. **The synthetic numbers do not transfer to the real web.** That is why the real-web sample
-  below exists.
+  0.64–0.93. **The synthetic numbers do not transfer to the real web.** That is why IW-Bench and the
+  real-web sample below exist.
+* **Held-out v3** (`fixtures_holdout_v3/`, 46 pages, frozen before any v0.4 change): short attributed samples
+  of test-split payloads from InjecAgent, BIPIA, AgentDojo and Open-Prompt-Injection, plus benign pages of the
+  real-web false-positive template types. Static + CSS: v0.3 3 TP / 4 FP / 23 FN / 16 TN (recall 0.12,
+  precision 0.43) → v0.4 9 / 4 / 17 / 16 (recall 0.35, precision 0.69). The 4 false positives are not fixed.
+
+### IW-Bench (planted recall)
+
+IW-Bench answers the question the fixtures cannot: how much of a **public** injection corpus the detector
+catches when the payload is hidden in a **real** page. Payloads come from InjecAgent, BIPIA, AgentDojo,
+Open-Prompt-Injection, greshake/llm-security and Lakera PINT examples; carriers are real saved article pages
+(Mozilla Readability test pages for dev, the Zyte article-extraction benchmark for test). Every source is a
+pinned git commit fetched at runtime (`make bench-data`, about 35 MB into `~/.cache/injectionwatch`); no
+dataset text is vendored. Each payload is planted with 3 of 25 hiding techniques; all tuning used the dev
+split, and the test split was run once per version. Full method, per-family and per-technique tables:
+[`reports/bench/README.md`](reports/bench/README.md); raw results: [`reports/bench/`](reports/bench/).
+
+| detector (test split) | hidden-payload recall | FP, unmodified real pages | FP, benign hidden text |
+|---|---:|---:|---:|
+| v0.3 static | 11.9% [9.8, 14.3] (95/798) | 0/174 [0, 2.2] | 0/231 |
+| v0.3 static + CSS | 12.4% [10.3, 14.9] (99/798) | 0/174 | 0/231 |
+| v0.3 rendered | 13.7% [11.5, 16.2] (109/798) | 0/174 | 0/231 |
+| **v0.4 static** | **32.2%** [29.1, 35.5] (257/798) | 0/174 [0, 2.2] | 0/231 |
+| **v0.4 static + CSS** | **33.2%** [30.0, 36.6] (265/798) | 0/174 | 0/231 |
+| **v0.4 rendered** | **34.5%** [31.3, 37.8] (275/798) | 0/174 | 0/231 |
+| v0.4 static + CSS + learned stage (opt-in, off by default) | 58.8% [55.3, 62.1] (469/798) | 0/174 | 0/231 |
+
+How to read it:
+* Placement is synthetic and uniform across techniques and payload families, so this is a bench average,
+  not a real-web prevalence-weighted recall.
+* Part of the v0.4 gain is template rules (AgentDojo's attack templates, InjecAgent's "enhanced" prefix)
+  that are identical in dev and test items; that measures "this template is now caught", not generalisation.
+* BIPIA text attacks stay at **0/216** with rules: they are ordinary task requests that look like page text.
+* **The learned stage is a negative result.** It is a hashed n-gram logistic regression (pure Python, with a
+  parity-tested TypeScript port) trained on dev items of the same datasets. Its test gain is within-dataset;
+  under leave-one-dataset-out it recovers only **3.6%** [1.9, 6.6] of an unseen dataset at a threshold that
+  keeps real pages clean. It ships off by default (`scan_html(..., ml=True)` or
+  `injectionwatch bench run --ml on` to try it).
 
 ### Real-web sample
 
@@ -583,17 +627,22 @@ a placeholder and must be set before any public crawl.
 * **Thin real-web evidence.** One crawl, one 426k-page sample, **one reviewer** (no inter-annotator
   agreement), **7 true positives**. Intervals are wide, and page-level intervals ignore host clustering
   (3 of the 5 manipulative pages share a host).
-* **Recall is not measured.** Only pages the detector raised were labelled, so prevalence is a **lower
-  bound** for what a static, rule-based scan can see.
+* **Real-web recall is not measured.** Only pages the detector raised were labelled, so prevalence is a
+  **lower bound** for what a static, rule-based scan can see. The near-miss sampling and labelling tools for
+  estimating it (`scripts/scan_cc.py --near-miss-sample`, `scripts/label_stats.py --near-misses`) are built
+  and tested on synthetic WARCs but have not been run on a crawl.
+* **Recall on public attack datasets is about one third.** IW-Bench v0.4 static + CSS: 33.2% of hidden
+  payloads. Plain task requests ("analyze the trend of electric car sales") are not caught by the rules.
 * **Static scan only.** A WARC scan sees HTML and response headers. External stylesheets (which Common
   Crawl rarely stores) and JavaScript-inserted text are invisible to it; the rendered pass exists but was
-  not run on the sample. The static CSS cascade is an approximation (no inheritance subtleties, no
-  pseudo-elements, a budget on complex selectors).
+  not run on the sample. The static CSS cascade is an approximation (no inheritance subtleties, a budget
+  on complex selectors); pseudo-element `content:` text is extracted but not resolved against the cascade.
 * **Human review is required.** Real-web precision is 0.44: more than half of what the detector raises is
   not an injection. The synthetic 1.00 precision does not transfer.
 * **Rules are lexical.** Novel paraphrases, languages outside the 10 supported, and payloads split across
   many elements can slip through. Quoted-mention down-weighting can be abused by wrapping a payload in
-  quotes. Script strings, images (OCR) and PDFs are not scanned.
+  quotes. Only prose-like inline-script strings are scanned (at a lower weight); images (OCR) and PDFs are
+  not scanned.
 * **Cloaking detection is UA-only.** Bots verified by IP or reverse DNS, and browser-based agents with
   normal Chrome UAs, can't be tested this way.
 * Confidence is a scaled rule score, not a calibrated probability.
@@ -610,6 +659,12 @@ a placeholder and must be set before any public crawl.
 5. Activate the monthly publish job; TAXII 2.1 endpoint; signed feed releases.
 
 ### Deferred (planned for 0.4, not done)
+
+* **Learned stage in the browser extension.** `extension/src/ml.ts` compiles and matches Python to 1e-9 in a
+  parity test, but the extension does not load the model; the stage is off by default everywhere because it
+  does not transfer to unseen datasets (see IW-Bench).
+* **The 4 held-out v3 false positives** (a tracking-pixel `[system]` marker, a hidden old post, a hidden exam
+  guide, hidden terms of use) are not fixed.
 
 * **X-ray page on the site**: paste HTML and see what a person sees next to what an agent sees. The shared
   collector it needs (`extension/src/collect.ts`) is in place; the page is not.

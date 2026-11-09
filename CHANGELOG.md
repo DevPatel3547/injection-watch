@@ -2,7 +2,7 @@
 
 All notable changes to InjectionWatch. Dates are UTC.
 
-## 0.4.0 (2026-11-08, pre-release)
+## 0.4.0 (2026-11-09)
 
 ### Security and privacy
 - **Real-web data re-redacted.** The committed sample hid the five affected hosts but still carried
@@ -15,6 +15,30 @@ All notable changes to InjectionWatch. Dates are UTC.
   fails closed. Scan inputs (WARC names) are no longer published.
 - `docs/threat-model.md`. Tests now cover rule regexes on adversarial floods and the dashboard rendering
   hostile feed text as text.
+
+### Measurement and detection
+- **IW-Bench** (`injectionwatch bench data|run`, `make bench-data`, `make bench`): recall on public injection
+  datasets (InjecAgent, BIPIA, AgentDojo, Open-Prompt-Injection, greshake/llm-security, Lakera PINT
+  examples) planted into real article pages with 25 hiding techniques, plus false-positive rates on
+  unmodified real pages, benign hidden UI text and pages that discuss prompt injection. Sources are pinned
+  git commits fetched at runtime. The v0.3 baseline was committed before any detector change.
+- Results (test split, static + CSS): hidden-payload recall **12.4% → 33.2%**, 0/174 real pages flagged
+  before and after. Rendered: 13.7% → 34.5%. BIPIA text attacks remain at 0%.
+- Held-out v3 (`fixtures_holdout_v3/`, frozen before the v0.4 changes): recall 0.12 → 0.35, precision
+  0.43 → 0.69. Its 4 false positives are not fixed. Held-out v2 is unchanged.
+- Rules 0.4.0 (110 rules): paired weak signals for agent-directed requests (acting on "my" accounts or
+  devices, sending to an address, moving money, injecting a code block into the reader's output, code that
+  sends data out; each needs a second signal), the AgentDojo and misspelled-override templates.
+- New extraction channels: prose-like inline-script strings (lower weight), CSS `::before`/`::after`
+  `content`, `iframe srcdoc` (recursive), SVG `title`/`desc`.
+- **Learned second stage, off by default (a negative result).** A hashed n-gram logistic regression
+  (`injectionwatch/ml.py`, pure Python; `extension/src/ml.ts` matches it in a parity test; trained by
+  `scripts/train_ml.py` with the `[train]` extra). It reaches 58.8% bench recall within-dataset, but only
+  3.6% on a dataset it was not trained on, so it is opt-in (`scan_html(..., ml=True)`).
+- Real-web recall tooling for the next crawl: `scripts/scan_cc.py --near-miss-sample N --public-out DIR`
+  (strips locators and redacts held hosts), `scripts/sample_near_misses.py`, `scripts/label_stats.py
+  --near-misses` (recall estimate) and `--kappa` (two-annotator agreement), and an offline labelling page
+  `scripts/label_ui/`.
 
 ### Agent side (new)
 - `injectionwatch.guard`: `fetch` (SSRF-safe: private, loopback, link-local and reserved addresses refused

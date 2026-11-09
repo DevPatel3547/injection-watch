@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nME20oByaqPxc/fRdNIdtZ1r8m4A/k1e+jPzFzuRYIA='; style-src 'sha256-z0ES5G16rIbc3SDTNsWxK48NF6QLrTp5AyjJc8Zb7po='; img-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>InjectionWatch labeller</title>
+<style>
+:root { --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --line: #dedbd3; --card: #ffffff; --accent: #2f5d8a;
+  --inj: #a3361f; --ben: #2f6b3a; --uns: #8a6d1f; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecebe6; --muted: #9d9b94; --line: #33322f;
+  --card: #1f1f1d; --accent: #7fa8d1; --inj: #e0785f; --ben: #7cc08a; --uns: #d8b55a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+main { max-width: 920px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-size: 18px; margin: 0 0 4px; }
+p.lead { color: var(--muted); margin: 0 0 16px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+button, label.file { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+button:focus-visible, label.file:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.progress { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.meta { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; font-size: 13px; color: var(--muted);
+  margin-bottom: 12px; overflow-wrap: anywhere; }
+.meta dd { margin: 0; color: var(--fg); }
+pre.text { white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin: 0 0 12px;
+  max-height: 50vh; overflow: auto; }
+.labels { display: flex; flex-wrap: wrap; gap: 8px; }
+.labels button[data-l=true_injection] { border-color: var(--inj); }
+.labels button[data-l=benign] { border-color: var(--ben); }
+.labels button[data-l=unsure] { border-color: var(--uns); }
+.labels button.on { color: var(--bg); }
+.labels button.on[data-l=true_injection] { background: var(--inj); }
+.labels button.on[data-l=benign] { background: var(--ben); }
+.labels button.on[data-l=unsure] { background: var(--uns); }
+textarea { width: 100%; font: inherit; margin-top: 10px; padding: 8px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--fg); min-height: 3em; }
+kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.help { color: var(--muted); font-size: 13px; margin-top: 14px; }
+.warn { color: var(--inj); font-size: 13px; margin: 0 0 12px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>InjectionWatch labeller</h1>
+  <p class="lead">Offline. Load a <code>hits.jsonl</code> or <code>near_misses.jsonl</code>; nothing leaves this page.
+    Text from pages is untrusted and shown as plain text only.</p>
+  <div class="bar">
+    <label class="file">Open JSONL<input id="file" type="file" accept=".jsonl,.json,.txt"></label>
+    <label class="file">Import labels<input id="imp" type="file" accept=".jsonl,.json,.txt"></label>
+    <button id="export" type="button" disabled>Export labels</button>
+    <button id="nextun" type="button" disabled>Next unlabelled</button>
+    <span class="progress" id="progress" aria-live="polite">no file</span>
+  </div>
+  <p class="warn" id="msg" hidden></p>
+  <section class="card" id="card" hidden>
+    <dl class="meta" id="meta"></dl>
+    <pre class="text" id="text"></pre>
+    <div class="labels" role="group" aria-label="Label">
+      <button type="button" data-l="true_injection"><kbd>1</kbd> Injection</button>
+      <button type="button" data-l="benign"><kbd>2</kbd> Benign</button>
+      <button type="button" data-l="unsure"><kbd>3</kbd> Unsure</button>
+      <button type="button" id="prev"><kbd>k</kbd> Prev</button>
+      <button type="button" id="next"><kbd>j</kbd> Next</button>
+    </div>
+    <textarea id="note" placeholder="Note (optional; press n to focus, Esc to leave)" aria-label="Note"></textarea>
+  </section>
+  <p class="help">Keys: <kbd>1</kbd> injection (text that instructs an AI system), <kbd>2</kbd> benign,
+    <kbd>3</kbd> unsure, <kbd>j</kbd>/<kbd>&rarr;</kbd> next, <kbd>k</kbd>/<kbd>&larr;</kbd> previous,
+    <kbd>u</kbd> next unlabelled, <kbd>n</kbd> note, <kbd>e</kbd> export. Labels autosave in this browser.
+    Label the text, not the site: a quote <em>about</em> prompt injection is benign.</p>
+</main>
+<script>
+"use strict";
+(function () {
+  var items = [], labels = {}, idx = 0, fileName = "", kind = "hit";
+  var $ = function (id) { return document.getElementById(id); };
+  function keyOf(i) { return kind === "nm" ? String(items[i].nm_id) : String(i); }
+  function storeKey() { return "iw-labels:" + fileName + ":" + items.length; }
+  function save() { try { localStorage.setItem(storeKey(), JSON.stringify(labels)); } catch (e) { /* private mode */ } }
+  function load() {
+    try { var s = localStorage.getItem(storeKey()); labels = s ? JSON.parse(s) : {}; } catch (e) { labels = {}; }
+  }
+  function msg(t) { var m = $("msg"); m.textContent = t || ""; m.hidden = !t; }
+  function parseJsonl(text) {
+    var out = [], lines = text.split(/\r?\n/);
+    for (var i = 0; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      try { out.push(JSON.parse(lines[i])); } catch (e) { throw new Error("line " + (i + 1) + " is not JSON"); }
+    }
+    return out;
+  }
+  function row(dl, k, v) {
+    if (v === undefined || v === null || v === "") return;
+    var dt = document.createElement("dt"), dd = document.createElement("dd");
+    dt.textContent = k; dd.textContent = Array.isArray(v) ? v.join(", ") : String(v);
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+  function render() {
+    var done = Object.keys(labels).length;
+    $("progress").textContent = items.length ? (idx + 1) + " / " + items.length + "  (" + done + " labelled)" : "no file";
+    $("export").disabled = $("nextun").disabled = !items.length;
+    $("card").hidden = !items.length;
+    if (!items.length) return;
+    var it = items[idx], dl = $("meta");
+    while (dl.firstChild) dl.removeChild(dl.firstChild);
+    row(dl, kind === "nm" ? "near-miss" : "hit", keyOf(idx));
+    row(dl, "url", it.url);
+    row(dl, "location", it.location);
+    row(dl, "techniques", it.techniques);
+    row(dl, "path", it.path);
+    row(dl, "detector", [it.severity, it.category, it.intent].filter(Boolean).join(" / "));
+    row(dl, "score", it.score);
+    row(dl, "rules", it.rules);
+    $("text").textContent = String(it.hidden_text || it.text || it.payload_excerpt || "");
+    var cur = labels[keyOf(idx)] || {};
+    var bs = document.querySelectorAll(".labels button[data-l]");
+    for (var i = 0; i < bs.length; i++) bs[i].classList.toggle("on", bs[i].getAttribute("data-l") === cur.label);
+    $("note").value = cur.note || "";
+  }
+  function setLabel(l) {
+    if (!items.length) return;
+    var k = keyOf(idx), cur = labels[k] || {};
+    labels[k] = { label: l, note: cur.note || "" };
+    save(); go(1);
+  }
+  function go(d) { if (items.length) { idx = Math.max(0, Math.min(items.length - 1, idx + d)); render(); } }
+  function nextUnlabelled() {
+    for (var s = 1; s <= items.length; s++) {
+      var j = (idx + s) % items.length;
+      if (!labels[keyOf(j)]) { idx = j; render(); return; }
+    }
+    msg("Everything is labelled.");
+  }
+  function exportLabels() {
+    var out = [];
+    for (var i = 0; i < items.length; i++) {
+      var l = labels[keyOf(i)];
+      if (!l) continue;
+      var rec = kind === "nm" ? { nm: keyOf(i) } : { hit: i };
+      rec.label = l.label;
+      if (l.note) rec.note = l.note;
+      out.push(JSON.stringify(rec));
+    }
+    var blob = new Blob([out.join("\n") + "\n"], { type: "application/x-ndjson" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (kind === "nm" ? "near_miss_labels" : "labels") + ".jsonl";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function readFile(input, cb) {
+    var f = input.files && input.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () { try { cb(f.name, parseJsonl(String(r.result))); } catch (e) { msg(e.message); } };
+    r.readAsText(f);
+  }
+  $("file").addEventListener("change", function () {
+    readFile(this, function (name, rows) {
+      items = rows; fileName = name; idx = 0;
+      kind = rows.length && rows[0].nm_id !== undefined ? "nm" : "hit";
+      load(); msg(""); render();
+    });
+  });
+  $("imp").addEventListener("change", function () {
+    readFile(this, function (_name, rows) {
+      var n = 0;
+      rows.forEach(function (x) {
+        var k = x.nm !== undefined ? String(x.nm) : (x.hit !== undefined ? String(x.hit) : null);
+        if (k !== null && x.label) { labels[k] = { label: String(x.label), note: x.note ? String(x.note) : "" }; n++; }
+      });
+      save(); render(); msg("Imported " + n + " labels.");
+    });
+  });
+  $("export").addEventListener("click", exportLabels);
+  $("nextun").addEventListener("click", nextUnlabelled);
+  $("prev").addEventListener("click", function () { go(-1); });
+  $("next").addEventListener("click", function () { go(1); });
+  document.querySelectorAll(".labels button[data-l]").forEach(function (b) {
+    b.addEventListener("click", function () { setLabel(b.getAttribute("data-l")); });
+  });
+  $("note").addEventListener("input", function () {
+    if (!items.length) return;
+    var k = keyOf(idx), cur = labels[k];
+    if (cur) { cur.note = this.value; save(); }
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.target === $("note")) { if (ev.key === "Escape") $("note").blur(); return; }
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var map = { "1": "true_injection", "2": "benign", "3": "unsure" };
+    if (map[ev.key]) { setLabel(map[ev.key]); ev.preventDefault(); }
+    else if (ev.key === "j" || ev.key === "ArrowRight") { go(1); ev.preventDefault(); }
+    else if (ev.key === "k" || ev.key === "ArrowLeft") { go(-1); ev.preventDefault(); }
+    else if (ev.key === "u") { nextUnlabelled(); }
+    else if (ev.key === "n") { $("note").focus(); ev.preventDefault(); }
+    else if (ev.key === "e" && items.length) { exportLabels(); }
+  });
+  render();
+})();
+</script>
+</body>
+</html>

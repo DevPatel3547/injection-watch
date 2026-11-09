@@ -2,7 +2,7 @@ PY ?= python3
 DB ?= injectionwatch.db
 SITE ?= _site
 
-.PHONY: help doctor demo-live demo-live-fake install lint fmt typecheck test cov check eval eval-full fixtures ext ext-package \
+.PHONY: help doctor demo-live demo-live-fake bench-data bench install lint fmt typecheck test cov check eval eval-full fixtures ext ext-package \
         demo warc-demo publish crawl-sample report serve mcp docker-build docker-run clean
 
 help:  ## list targets
@@ -33,6 +33,12 @@ eval:  ## precision/recall, static mode, all corpora
 
 eval-full:  ## static + static_css + rendered, writes reports/eval/latest.json
 	$(PY) -m injectionwatch eval --rendered --details --json-out reports/eval/latest.json
+
+bench-data:  ## fetch IW-Bench sources (pinned git commits, ~35 MB) into ~/.cache/injectionwatch
+	$(PY) -m injectionwatch.bench.cli data
+
+bench:  ## IW-Bench recall on the test split, all modes, writes reports/bench/
+	$(PY) -m injectionwatch.bench.cli run --mode all --split test --out reports/bench
 
 fixtures:  ## regenerate dev fixture corpora (never touches the frozen held-out set)
 	$(PY) scripts/make_fixtures.py
