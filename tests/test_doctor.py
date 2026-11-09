@@ -2,6 +2,8 @@ import json
 import subprocess
 import sys
 
+import pytest
+
 from injectionwatch import doctor
 from injectionwatch.cli import main
 
@@ -85,6 +87,7 @@ def test_network_checks_are_offline_safe(monkeypatch):
 
 
 def test_network_check_against_fake_anthropic(monkeypatch):
+    pytest.importorskip("anthropic")  # without the [llm] extra doctor rightly reports "SDK not installed"
     from .fakes.anthropic_server import FakeAnthropic
 
     with FakeAnthropic(valid_keys=("good-test-key",)) as fake:

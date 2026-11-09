@@ -86,11 +86,11 @@ def test_cli_scan_site_fixtures_dev_sarif_and_fail_on(tmp_path, capsys, monkeypa
     js = tmp_path / "r.json"
     assert main(["scan-site", "fixtures_dev", "--sarif", str(out), "--summary-md", str(summ),
                  "--json-out", str(js)]) == 1                               # default --fail-on flagged
-    log = json.loads(out.read_text())
+    log = json.loads(out.read_text("utf-8"))
     _validate(log)
     assert len(log["runs"][0]["results"]) >= 20
     assert "flagged" in capsys.readouterr().out
-    assert "| file | line |" in summ.read_text() and json.loads(js.read_text())["summary"]["flagged"] >= 20
+    assert "| file | line |" in summ.read_text("utf-8") and json.loads(js.read_text("utf-8"))["summary"]["flagged"] >= 20
     assert main(["scan-site", "fixtures_dev", "--fail-on", "flagged"]) == 1
     capsys.readouterr()
     assert main(["scan-site", "fixtures_dev", "--fail-on", "never", "--format", "json"]) == 0
@@ -118,7 +118,7 @@ def test_css_resolver_never_leaves_the_root(tmp_path):
 
 def _action_steps():
     yaml = pytest.importorskip("yaml")
-    return {s.get("name", ""): s for s in yaml.safe_load((ROOT / "action.yml").read_text())["runs"]["steps"]}
+    return {s.get("name", ""): s for s in yaml.safe_load((ROOT / "action.yml").read_text("utf-8"))["runs"]["steps"]}
 
 
 @pytest.mark.skipif(not shutil.which("bash") or sys.platform == "win32", reason="needs bash")
@@ -133,10 +133,10 @@ def test_action_scan_and_enforce_steps(tiny_site, tmp_path, fail_on, expect_rc):
     scan = subprocess.run(["bash", "-e", "-c", steps["Scan"]["run"]], env=env, capture_output=True, text=True,
                           timeout=120, cwd=tmp_path)
     assert scan.returncode == 0, scan.stderr
-    outputs = dict(line.split("=", 1) for line in gh_out.read_text().splitlines())
+    outputs = dict(line.split("=", 1) for line in gh_out.read_text("utf-8").splitlines())
     assert outputs["flagged"] == "2" and outputs["files_scanned"] == "3"
-    _validate(json.loads((tmp_path / "iw.sarif").read_text()))
-    assert "InjectionWatch scan-site" in gh_sum.read_text()
+    _validate(json.loads((tmp_path / "iw.sarif").read_text("utf-8")))
+    assert "InjectionWatch scan-site" in gh_sum.read_text("utf-8")
     env.update(IW_FAIL_ON=fail_on, IW_FLAGGED=outputs["flagged"], IW_FINDINGS=outputs["findings"])
     enforce = subprocess.run(["bash", "-e", "-c", steps["Enforce fail-on"]["run"]], env=env, capture_output=True,
                              text=True, timeout=30)
@@ -147,10 +147,10 @@ def test_action_scan_and_enforce_steps(tiny_site, tmp_path, fail_on, expect_rc):
 
 def test_action_metadata():
     yaml = pytest.importorskip("yaml")
-    meta = yaml.safe_load((ROOT / "action.yml").read_text())
+    meta = yaml.safe_load((ROOT / "action.yml").read_text("utf-8"))
     assert meta["runs"]["using"] == "composite" and set(meta["inputs"]) >= {"path", "fail-on", "sarif-file"}
     install = _action_steps()["Install InjectionWatch (from this action's ref)"]["run"]
     assert "$GITHUB_ACTION_PATH" in install            # installs the action's own ref, not a moving target
-    example = yaml.safe_load((ROOT / "examples/github-action.yml").read_text())
+    example = yaml.safe_load((ROOT / "examples/github-action.yml").read_text("utf-8"))
     assert example["permissions"]["security-events"] == "write"
     assert Path(ROOT / "tests/schemas/sarif-schema-2.1.0.json").stat().st_size > 50_000
